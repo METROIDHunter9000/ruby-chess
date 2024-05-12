@@ -53,9 +53,9 @@ class Board
     index_cartesian(Coordinate.from_algebraic(code))
   end
 
-  def index_cartesian(pos)
-    raise IndexError unless pos.valid?
-    @grid[pos.row][pos.col]
+  def index_cartesian(coord)
+    raise IndexError.new("Coordinate provided is out of bounds") unless coord.valid?
+    @grid[coord.row][coord.col]
   end
 
   def overwrite(position, piece)
