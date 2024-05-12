@@ -16,12 +16,10 @@ class Board
     @black_team = Set[]
     @white_team = Set[]
 
-    bk_pos = Coordinate.new(4,7)
-    wk_pos = Coordinate.new(4,0)
-    @black_king = King.new(:black, bk_pos)
-    @white_king = King.new(:white, wk_pos)
-    new_piece(bk_pos, @black_king)
-    new_piece(wk_pos, @white_king)
+    @black_king = King.new(:black)
+    @white_king = King.new(:white)
+    new_piece(Coordinate.new(4,7), @black_king)
+    new_piece(Coordinate.new(4,0), @white_king)
 
     queen_ftry = QueenFactory.new(self)
     pawn_ftry = PawnFactory.new(self)
