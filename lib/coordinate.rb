@@ -19,4 +19,8 @@ class Coordinate
   def to_algebraic
     "#{(col+97).chr}#{row+1}"
   end
+
+  def to_s
+    "#{self.col},#{self.row}"
+  end
 end
