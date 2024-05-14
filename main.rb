@@ -2,8 +2,6 @@ require_relative './lib/game.rb'
 require_relative './lib/display.rb'
 require_relative './lib/board.rb'
 
-board = Board.new
+board = Board.new_standard
 display = BoardDisplay.new(board)
-
-highlight = Highlight.new(["f3", "f2", "f1"], "11", "1")
-display.display(highlight)
+display.display()

@@ -5,19 +5,37 @@ require 'set'
 
 class Board
   protected attr_accessor :black_team, :white_team
+  private attr_accessor :black_king, :white_king
 
   public
   def initialize
-    reset_board
+    reset_board!
   end
 
-  def reset_board
+  def self.new_blank
+    board = Board.new
+    board.reset_board!
+    return board
+  end
+
+  def self.new_standard
+    board = Board.new
+    board.reset_board!
+    board.populate_board!
+    return board
+  end
+
+  def reset_board!
     @grid = Array.new(8) { Array.new (8) }
     @black_team = Set[]
     @white_team = Set[]
+    @black_king = nil
+    @white_king = nil
+  end
 
-    @black_king = King.new(:black)
-    @white_king = King.new(:white)
+  def populate_board!
+    @black_king = King.new(@board, :black)
+    @white_king = King.new(@board, :white)
     new_piece(Coordinate.new(4,7), @black_king)
     new_piece(Coordinate.new(4,0), @white_king)
 
@@ -43,8 +61,8 @@ class Board
     rook_ftry.create_piece(:white, Coordinate.new(7,0))
 
     0.upto 7 do |col|
-      pawn_ftry.create_piece(:white, Coordinate.new(col, 1))
-      pawn_ftry.create_piece(:black, Coordinate.new(col, 6))
+      pawn_ftry.create_piece(:white, Coordinate.new(col, 6))
+      pawn_ftry.create_piece(:black, Coordinate.new(col, 1))
     end
 
   end
@@ -60,8 +78,8 @@ class Board
 
   def overwrite(position, piece)
     @grid[position.row][position.col] = piece
-    piece.position.col = position.col
-    piece.position.row = position.row
+    piece.position.col = position.col if piece
+    piece.position.row = position.row if piece
   end
 
   def new_piece(position, piece)
@@ -80,35 +98,35 @@ class Board
 
   class PawnFactory < PieceFactory
     def create_piece(color, position)
-      piece = Pawn.new(color)
+      piece = Pawn.new(@board, color)
       @board.new_piece(position, piece)
     end
   end
   
   class RookFactory < PieceFactory
     def create_piece(color, position)
-      piece = Rook.new(color)
+      piece = Rook.new(@board, color)
       @board.new_piece(position, piece)
     end
   end
   
   class KnightFactory < PieceFactory
     def create_piece(color, position)
-      piece = Knight.new(color)
+      piece = Knight.new(@board, color)
       @board.new_piece(position, piece)
     end
   end
   
   class BishopFactory < PieceFactory
     def create_piece(color, position)
-      piece = Bishop.new(color)
+      piece = Bishop.new(@board, color)
       @board.new_piece(position, piece)
     end
   end
   
   class QueenFactory < PieceFactory
     def create_piece(color, position)
-      piece = Queen.new(color)
+      piece = Queen.new(@board, color)
       @board.new_piece(position, piece)
     end
   end

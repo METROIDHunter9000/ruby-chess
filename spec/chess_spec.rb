@@ -7,26 +7,26 @@ describe Piece do
     context "for a Knight" do
       before do
         @board = Board.new_blank
-        @knight = Knight.new :white
+        @knight = Knight.new(@board, :white)
         @board.new_piece(Coordinate.new(2,1), @knight)
         @expected_moves = Set['a1','a3','b4','d4','e1','e3']
       end
 
       it "finds valid moves" do
-        moves = @knight.valid_moves(@board)
+        moves = @knight.valid_moves
         expect(moves.keys.to_set).to eql @expected_moves
         moves.values.each {|move| expect(move.class).to eql StandardMove}
       end
 
       it "finds valid captures" do
-        @board.new_piece(Coordinate.new(0,0), Rook.new(:black))
-        @board.new_piece(Coordinate.new(0,2), Rook.new(:black))
-        @board.new_piece(Coordinate.new(1,3), Rook.new(:black))
-        @board.new_piece(Coordinate.new(3,3), Rook.new(:black))
-        @board.new_piece(Coordinate.new(4,0), Rook.new(:black))
-        @board.new_piece(Coordinate.new(4,2), Rook.new(:black))
+        @board.new_piece(Coordinate.new(0,0), Rook.new(@board, :black))
+        @board.new_piece(Coordinate.new(0,2), Rook.new(@board, :black))
+        @board.new_piece(Coordinate.new(1,3), Rook.new(@board, :black))
+        @board.new_piece(Coordinate.new(3,3), Rook.new(@board, :black))
+        @board.new_piece(Coordinate.new(4,0), Rook.new(@board, :black))
+        @board.new_piece(Coordinate.new(4,2), Rook.new(@board, :black))
         
-        moves = @knight.valid_moves(@board)
+        moves = @knight.valid_moves
         expect(moves.keys.to_set).to eql @expected_moves
         moves.values.each {|move| expect(move.class).to eql CapturingMove}
       end
@@ -35,12 +35,12 @@ describe Piece do
     context "for a Bishop" do
       before do
         @board = Board.new_blank
-        @bishop = Bishop.new :white
+        @bishop = Bishop.new(@board, :white)
         @board.new_piece(Coordinate.new(3,3), @bishop)
-        @board.new_piece(Coordinate.new(2,2), Bishop.new(:white))
-        @board.new_piece(Coordinate.new(4,4), Bishop.new(:black))
-        @board.new_piece(Coordinate.new(5,1), Bishop.new(:white))
-        @moves = @bishop.valid_moves(@board)
+        @board.new_piece(Coordinate.new(2,2), Bishop.new(@board, :white))
+        @board.new_piece(Coordinate.new(4,4), Bishop.new(@board, :black))
+        @board.new_piece(Coordinate.new(5,1), Bishop.new(@board, :white))
+        @moves = @bishop.valid_moves
       end
 
       it "finds valid moves" do
@@ -64,17 +64,17 @@ describe Piece do
     context "for a Rook" do
       before do
         @board = Board.new_blank
-        @king = King.new :white
-        @rook = Rook.new :white
-        @rook2 = Rook.new :white
+        @king = King.new(@board, :white)
+        @rook = Rook.new(@board, :white)
+        @rook2 = Rook.new(@board, :white)
 
         @board.new_piece(Coordinate.new(4,0), @king)
         @board.new_piece(Coordinate.new(0,0), @rook)
         @board.new_piece(Coordinate.new(7,0), @rook2)
-        @board.new_piece(Coordinate.new(0,3), Pawn.new(:black))
-        @board.new_piece(Coordinate.new(7,3), Pawn.new(:white))
-        @moves = @rook.valid_moves(@board)
-        @moves2 = @rook2.valid_moves(@board)
+        @board.new_piece(Coordinate.new(0,3), Pawn.new(@board, :black))
+        @board.new_piece(Coordinate.new(7,3), Pawn.new(@board, :white))
+        @moves = @rook.valid_moves
+        @moves2 = @rook2.valid_moves
       end
 
       it "finds valid moves" do
@@ -119,11 +119,11 @@ describe Piece do
 
         it "cannot castle if either of them have moved" do
           @rook2.num_moves = 1
-          @moves2 = @rook2.valid_moves(@board)
+          @moves2 = @rook2.valid_moves
           expect(@moves2.include?("e1")).to eql false
 
           @king.num_moves = 1
-          @moves = @rook.valid_moves(@board)
+          @moves = @rook.valid_moves
           expect(@moves.include?("e1")).to eql false
 
           @rook2.num_moves = 0
@@ -132,13 +132,13 @@ describe Piece do
 
         it "cannot castle if the king is in check" do
           bpos = Coordinate.new(5,1)
-          bishop = Bishop.new("black")
+          bishop = Bishop.new(@board, :black)
           @board.new_piece(bpos, bishop)
 
-          @moves = @rook.valid_moves(@board)
+          @moves = @rook.valid_moves
           expect(@moves.include?("e1")).to eql false
 
-          @moves2 = @rook2.valid_moves(@board)
+          @moves2 = @rook2.valid_moves
           expect(@moves2.include?("e1")).to eql false
 
           @board.overwrite(bpos, nil)
@@ -148,12 +148,12 @@ describe Piece do
         it "cannot castle if the king will be in check" do
           bpos1 = Coordinate.new(2,2)
           bpos2 = Coordinate.new(6,2)
-          rook1 = Rook.new("black")
-          rook2 = Rook.new("black")
+          rook1 = Rook.new(@board, :black)
+          rook2 = Rook.new(@board, :black)
           @board.new_piece(bpos1, rook1)
           @board.new_piece(bpos2, rook2)
-          @moves = @rook.valid_moves(@board)
-          @moves2 = @rook2.valid_moves(@board)
+          @moves = @rook.valid_moves
+          @moves2 = @rook2.valid_moves
           expect(@moves.include?("e1")).to eql false
           expect(@moves2.include?("e1")).to eql false
           @board.overwrite(bpos1, nil)
@@ -165,12 +165,12 @@ describe Piece do
         it "cannot castle if any enemy piece is attacking a position traversed by the king during castling" do 
           bpos1 = Coordinate.new(3,2)
           bpos2 = Coordinate.new(5,2)
-          rook1 = Rook.new("black")
-          rook2 = Rook.new("black")
+          rook1 = Rook.new(@board, :black)
+          rook2 = Rook.new(@board, :black)
           @board.new_piece(bpos1, rook1)
           @board.new_piece(bpos2, rook2)
-          @moves = @rook.valid_moves(@board)
-          @moves2 = @rook2.valid_moves(@board)
+          @moves = @rook.valid_moves
+          @moves2 = @rook2.valid_moves
           expect(@moves.include?("e1")).to eql false
           expect(@moves2.include?("e1")).to eql false
           @board.overwrite(bpos1, nil)
@@ -185,13 +185,13 @@ describe Piece do
     context "for a King" do
       before do
         @board = Board.new_blank
-        @king = King.new :white
+        @king = King.new(@board, :white)
 
         @board.new_piece(Coordinate.new(1,1), @king)
-        @board.new_piece(Coordinate.new(0,2), Queen.new(:black))
-        @board.new_piece(Coordinate.new(0,1), Queen.new(:black))
-        @board.new_piece(Coordinate.new(2,2), Queen.new(:white))
-        @moves = @king.valid_moves(@board)
+        @board.new_piece(Coordinate.new(0,2), Queen.new(@board, :black))
+        @board.new_piece(Coordinate.new(0,1), Queen.new(@board, :black))
+        @board.new_piece(Coordinate.new(2,2), Queen.new(@board, :white))
+        @moves = @king.valid_moves
       end
 
       it "finds valid moves" do
@@ -215,16 +215,16 @@ describe Piece do
     context "for a Queen" do
       before do
         @board = Board.new_blank
-        @queen = Queen.new :white
+        @queen = Queen.new(@board, :white)
         @board.new_piece(Coordinate.new(3,3), @queen)
-        @board.new_piece(Coordinate.new(2,2), Queen.new(:white))
-        @board.new_piece(Coordinate.new(4,4), Queen.new(:black))
-        @board.new_piece(Coordinate.new(5,1), Queen.new(:white))
+        @board.new_piece(Coordinate.new(2,2), Queen.new(@board, :white))
+        @board.new_piece(Coordinate.new(4,4), Queen.new(@board, :black))
+        @board.new_piece(Coordinate.new(5,1), Queen.new(@board, :white))
 
-        @board.new_piece(Coordinate.new(3,4), Queen.new(:white))
-        @board.new_piece(Coordinate.new(3,2), Queen.new(:black))
-        @board.new_piece(Coordinate.new(5,3), Queen.new(:white))
-        @moves = @queen.valid_moves(@board)
+        @board.new_piece(Coordinate.new(3,4), Queen.new(@board, :white))
+        @board.new_piece(Coordinate.new(3,2), Queen.new(@board, :black))
+        @board.new_piece(Coordinate.new(5,3), Queen.new(@board, :white))
+        @moves = @queen.valid_moves
       end
 
       it "finds valid moves" do
