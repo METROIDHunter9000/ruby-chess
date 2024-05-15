@@ -42,14 +42,16 @@ class Rook < Piece
 
         piece = @board.index_cartesian(coord)
         if piece
-          moves[coord.to_algebraic] = CapturingMove.new(self, self.position, coord, piece) if piece.color != self.color
-
-          is_my_king = piece.class == King && piece.color == self.color
-          is_our_first_move = piece.num_moves == 0 && 0 == self.num_moves
-          moves[coord.to_algebraic] = "castle" if is_our_first_move and is_my_king
+          if piece.color != self.color
+            moves[coord.to_algebraic] = CapturingMove.new(self, self.position, coord, piece, @board) 
+          else
+            is_my_king = piece.class == King && piece.color == self.color
+            is_our_first_move = piece.num_moves == 0 && 0 == self.num_moves
+            moves[coord.to_algebraic] = CastlingMove.new(self, self.position, piece, @board) if is_our_first_move and is_my_king
+          end
           break
         else
-          moves[coord.to_algebraic] = StandardMove.new(self, self.position, coord)
+          moves[coord.to_algebraic] = StandardMove.new(self, self.position, coord, @board)
           delta[0] += dir[0]
           delta[1] += dir[1]
         end
@@ -78,10 +80,10 @@ class Bishop < Piece
 
         piece = @board.index_cartesian(coord)
         if piece
-          moves[coord.to_algebraic] = CapturingMove.new(self, self.position, coord, piece) if piece.color != self.color
+          moves[coord.to_algebraic] = CapturingMove.new(self, self.position, coord, piece, @board) if piece.color != self.color
           break
         else
-          moves[coord.to_algebraic] = StandardMove.new(self, self.position, coord)
+          moves[coord.to_algebraic] = StandardMove.new(self, self.position, coord, @board)
           delta[0] += dir[0]
           delta[1] += dir[1]
         end
@@ -106,8 +108,8 @@ class Knight < Piece
       coord = Coordinate.new(self.position.col + move[0], self.position.row + move[1])
       next unless coord.valid?
       piece = @board.index_cartesian(coord)
-      moves[coord.to_algebraic] = StandardMove.new(self, self.position, coord) unless piece
-      moves[coord.to_algebraic] = CapturingMove.new(self, self.position, coord, piece) if piece && piece.color != self.color
+      moves[coord.to_algebraic] = StandardMove.new(self, self.position, coord, @board) unless piece
+      moves[coord.to_algebraic] = CapturingMove.new(self, self.position, coord, piece, @board) if piece && piece.color != self.color
     end
     return moves
   end
@@ -134,7 +136,7 @@ class Pawn < Piece
     if coord_up1.valid? 
       piece_up1 = @board.index_cartesian(coord_up1) 
       moves[coord_up1.to_algebraic] = "promote" if coord_up1.row == row_end
-      moves[coord_up1.to_algebraic] = StandardMove.new(self, self.position, coord_up1) if coord_up1.row != row_end && piece_up1 == nil
+      moves[coord_up1.to_algebraic] = StandardMove.new(self, self.position, coord_up1, @board) if coord_up1.row != row_end && piece_up1 == nil
     end
 
     coord_up2 = Coordinate.new(self.position.col, self.position.row + up*2)
@@ -156,11 +158,11 @@ class Pawn < Piece
     piece_upleft = @board.index_cartesian(coord_upleft)
     piece_upright = @board.index_cartesian(coord_upright)
     if coord_upleft.valid? && piece_upleft && piece_upleft.color != self.color
-      moves[coord_upleft.to_algebraic] = CapturingMove.new(self, self.position, coord_upleft, piece_upleft) if coord_upleft.row != row_end
+      moves[coord_upleft.to_algebraic] = CapturingMove.new(self, self.position, coord_upleft, piece_upleft, @board) if coord_upleft.row != row_end
       moves[coord_upleft.to_algebraic] = "capture and promote" if coord_upleft.row == row_end
     end
     if coord_upright.valid? && piece_upright && piece_upright.color != self.color
-      moves[coord_upright.to_algebraic] = CapturingMove.new(self, self.position, coord_upright, piece_upright) if coord_upright.row != row_end
+      moves[coord_upright.to_algebraic] = CapturingMove.new(self, self.position, coord_upright, piece_upright, @board) if coord_upright.row != row_end
       moves[coord_upright.to_algebraic] = "capture and promote" if coord_upright.row == row_end
     end
     return moves
@@ -182,8 +184,8 @@ class King < Piece
       coord = Coordinate.new(self.position.col + move[0], self.position.row + move[1])
       next unless coord.valid?
       piece = @board.index_cartesian(coord)
-      moves[coord.to_algebraic] = StandardMove.new(self, self.position, coord) unless piece
-      moves[coord.to_algebraic] = CapturingMove.new(self, self.position, coord, piece) if piece && piece.color != self.color
+      moves[coord.to_algebraic] = StandardMove.new(self, self.position, coord, @board) unless piece
+      moves[coord.to_algebraic] = CapturingMove.new(self, self.position, coord, piece, @board) if piece && piece.color != self.color
     end
     return moves
   end
@@ -208,10 +210,10 @@ class Queen < Piece
 
         piece = @board.index_cartesian(coord)
         if piece
-          moves[coord.to_algebraic] = CapturingMove.new(self, self.position, coord, piece) if piece.color != self.color
+          moves[coord.to_algebraic] = CapturingMove.new(self, self.position, coord, piece, @board) if piece.color != self.color
           break
         else
-          moves[coord.to_algebraic] = StandardMove.new(self, self.position, coord)
+          moves[coord.to_algebraic] = StandardMove.new(self, self.position, coord, @board)
           delta[0] += dir[0]
           delta[1] += dir[1]
         end
