@@ -271,6 +271,8 @@ describe Move do
       @board.new_piece(Coordinate.new(3,6), @knight)
       @move_queen = @queen.valid_moves["g4"]
       @move_knight = @knight.valid_moves["c5"]
+      expect(@move_queen.class).to eql StandardMove
+      expect(@move_knight.class).to eql StandardMove
     end
     describe "#execute" do
       it "moves any piece to an empty spot on the board" do
@@ -317,6 +319,8 @@ describe Move do
       @board.new_piece(Coordinate.new(4,7), @king2)
       @castle_black = @rook2.valid_moves["e8"]
       @castle_white = @rook1.valid_moves["e1"]
+      expect(@castle_black.class).to eql CastlingMove
+      expect(@castle_white.class).to eql CastlingMove
     end
     describe "#execute" do
       it "moves the rook up next to the king, and then jumps the king over the rook" do
@@ -358,6 +362,45 @@ describe Move do
         expect(@rook2.num_moves).to eql 0
         expect(@king1.num_moves).to eql 0
         expect(@king2.num_moves).to eql 0
+      end
+    end
+  end
+
+  describe CapturingMove do
+    before do
+      @board = Board.new_blank
+      @rook = Rook.new(@board, :white)
+      @pawn = Pawn.new(@board, :black)
+      @board.new_piece(Coordinate.new(0,0), @rook)
+      @board.new_piece(Coordinate.new(0,6), @pawn)
+      @capture = @rook.valid_moves["a7"]
+      expect(@capture.class).to eql CapturingMove 
+    end
+    describe "#execute" do
+      it "moves a piece on top of an enemy piece and captures it" do
+        @capture.execute
+
+        expect(@board.index_algebraic("a7")).to eql @rook
+        expect(@board.index_algebraic("a1")).to eql nil
+
+        expect(@pawn.num_moves).to eql 0
+        expect(@pawn.is_captured).to eql true
+
+        expect(@rook.num_moves).to eql 1
+      end
+    end
+    describe "#reverse" do
+      it "reverses the move" do
+        @capture.execute
+        @capture.reverse
+
+        expect(@board.index_algebraic("a7")).to eql @pawn
+        expect(@board.index_algebraic("a1")).to eql @rook
+
+        expect(@pawn.num_moves).to eql 0
+        expect(@pawn.is_captured).to eql false
+
+        expect(@rook.num_moves).to eql 0
       end
     end
   end

@@ -35,7 +35,7 @@ end
 
 class CapturingMove < Move
   attr_reader :target
-  def initialize (piece, start, endp, board, target)
+  def initialize (piece, start, endp, target, board)
     super(piece, start, endp, board)
     @target = target
   end
