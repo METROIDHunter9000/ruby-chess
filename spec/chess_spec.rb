@@ -260,3 +260,105 @@ describe Piece do
     end
   end
 end
+
+describe Move do
+  describe StandardMove do
+    before do
+      @board = Board.new_blank
+      @queen = Queen.new(@board, :white)
+      @board.new_piece(Coordinate.new(3,3), @queen)
+      @knight = Knight.new(@board, :white)
+      @board.new_piece(Coordinate.new(3,6), @knight)
+      @move_queen = @queen.valid_moves["g4"]
+      @move_knight = @knight.valid_moves["c5"]
+    end
+    describe "#execute" do
+      it "moves any piece to an empty spot on the board" do
+        @move_queen.execute
+        @move_knight.execute
+
+        expect(@board.index_algebraic("d4")).to eql nil
+        expect(@board.index_algebraic("d7")).to eql nil
+        expect(@board.index_algebraic("g4")).to eql @queen
+        expect(@board.index_algebraic("c5")).to eql @knight
+
+        expect(@queen.num_moves).to eql 1
+        expect(@knight.num_moves).to eql 1
+      end
+    end
+    describe "#reverse" do
+      it "reverses the move" do
+        @move_queen.execute
+        @move_knight.execute
+        @move_queen.reverse
+        @move_knight.reverse
+
+        expect(@board.index_algebraic("d4")).to eql @queen
+        expect(@board.index_algebraic("d7")).to eql @knight
+        expect(@board.index_algebraic("g4")).to eql nil
+        expect(@board.index_algebraic("c5")).to eql nil
+
+        expect(@queen.num_moves).to eql 0
+        expect(@knight.num_moves).to eql 0
+      end
+    end
+  end
+
+  describe CastlingMove do
+    before do
+      @board = Board.new_blank
+      @rook1 = Rook.new(@board, :white)
+      @king1 = King.new(@board, :white)
+      @rook2 = Rook.new(@board, :black)
+      @king2 = King.new(@board, :black)
+      @board.new_piece(Coordinate.new(0,0), @rook1)
+      @board.new_piece(Coordinate.new(4,0), @king1)
+      @board.new_piece(Coordinate.new(7,7), @rook2)
+      @board.new_piece(Coordinate.new(4,7), @king2)
+      @castle_black = @rook2.valid_moves["e8"]
+      @castle_white = @rook1.valid_moves["e1"]
+    end
+    describe "#execute" do
+      it "moves the rook up next to the king, and then jumps the king over the rook" do
+        @castle_white.execute
+        @castle_black.execute
+
+        expect(@board.index_algebraic("d1")).to eql @rook1
+        expect(@board.index_algebraic("c1")).to eql @king1
+        expect(@board.index_algebraic("f8")).to eql @rook2
+        expect(@board.index_algebraic("g8")).to eql @king2
+        expect(@board.index_algebraic("a1")).to eql nil
+        expect(@board.index_algebraic("e1")).to eql nil
+        expect(@board.index_algebraic("e8")).to eql nil
+        expect(@board.index_algebraic("h8")).to eql nil
+
+        expect(@rook1.num_moves).to eql 1
+        expect(@rook2.num_moves).to eql 1
+        expect(@king1.num_moves).to eql 1
+        expect(@king2.num_moves).to eql 1
+      end
+    end
+    describe "#reverse" do
+      it "reverses the move" do
+        @castle_white.execute
+        @castle_black.execute
+        @castle_white.reverse
+        @castle_black.reverse
+
+        expect(@board.index_algebraic("d1")).to eql nil
+        expect(@board.index_algebraic("c1")).to eql nil
+        expect(@board.index_algebraic("f8")).to eql nil
+        expect(@board.index_algebraic("g8")).to eql nil
+        expect(@board.index_algebraic("a1")).to eql @rook1
+        expect(@board.index_algebraic("e1")).to eql @king1
+        expect(@board.index_algebraic("e8")).to eql @king2
+        expect(@board.index_algebraic("h8")).to eql @rook2
+
+        expect(@rook1.num_moves).to eql 0
+        expect(@rook2.num_moves).to eql 0
+        expect(@king1.num_moves).to eql 0
+        expect(@king2.num_moves).to eql 0
+      end
+    end
+  end
+end

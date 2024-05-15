@@ -21,14 +21,14 @@ end
 
 class StandardMove < Move
   def execute
-    board.overwrite(@end, @piece)
-    board.overwrite(@start,nil)
+    @board.overwrite(@end, @piece)
+    @board.overwrite(@start,nil)
     @piece.num_moves += 1
   end
 
   def reverse
-    board.overwrite(@start, @piece)
-    board.overwrite(@end,nil)
+    @board.overwrite(@start, @piece)
+    @board.overwrite(@end,nil)
     @piece.num_moves -= 1
   end
 end
@@ -41,17 +41,17 @@ class CapturingMove < Move
   end
 
   def execute
-    board.overwrite(@start, nil)
+    @board.overwrite(@start, nil)
     @target.is_captured = true
-    board.overwrite(@end, @piece)
+    @board.overwrite(@end, @piece)
     @piece.num_moves += 1
   end
 
   def reverse
-    board.overwrite(@start, @piece)
+    @board.overwrite(@start, @piece)
     @piece.num_moves -= 1
     @target.is_captured = false
-    board.overwrite(@end, @target)
+    @board.overwrite(@end, @target)
   end
 end
 
@@ -67,6 +67,7 @@ class CastlingMove < Move
 
     super(rook, start, endp, board)
     @king = king
+    @start_king = king.position.clone
   end
 
   def legal?(board)
@@ -79,8 +80,8 @@ class CastlingMove < Move
   end
 
   def execute
-    @board.overwrite(@piece.position, nil)
-    @board.overwrite(@king.position, nil)
+    @board.overwrite(@start, nil)
+    @board.overwrite(@start_king, nil)
     @piece.num_moves += 1
     @king.num_moves += 1
     if @piece.position.col < @king.position.col
@@ -95,8 +96,8 @@ class CastlingMove < Move
   def reverse
     @board.overwrite(@piece.position, nil)
     @board.overwrite(@king.position, nil)
-    @board.overwrite(@rook_pos_old, @piece)
-    @board.overwrite(@king_pos_old, @king)
+    @board.overwrite(@start, @piece)
+    @board.overwrite(@start_king, @king)
     @piece.num_moves -= 1
     @king.num_moves -= 1
   end
