@@ -43,11 +43,11 @@ class StandardMove < SimpleMove
     raise ArgumentError.new("Cannot move to position occupied by another piece") if board.index_cartesian(endp)
 
     super(board, piece)
-    @start = piece.position.clone
     @end = endp.clone
   end
 
   def execute
+    @start = @piece.position.clone
     @board.overwrite(@end, @piece)
     @board.overwrite(@start,nil)
     @piece.num_moves += 1
@@ -71,8 +71,8 @@ class CapturingMove < SimpleMove
   end
 
   def execute
+    @board.delete_piece(@target.position)
     @board.overwrite(@start, nil)
-    @target.is_captured = true
     @board.overwrite(@end, @piece)
     @piece.num_moves += 1
   end
@@ -80,17 +80,41 @@ class CapturingMove < SimpleMove
   def reverse
     @board.overwrite(@start, @piece)
     @piece.num_moves -= 1
-    @target.is_captured = false
-    @board.overwrite(@end, @target)
+    @board.new_piece(@end, @target)
   end
 end
 
 class PromotingMove < SimpleMove
+  private attr_accessor :new_queen
+  def initialize(board, pawn)
+    super(board, pawn)
+  end
 
+  def execute
+    new_queen = Queen.new(board, @piece.color, @piece.position.clone)
+    @board.delete_piece(@piece.position)
+    @board.new_piece(@piece.position, new_queen)
+  end
+
+  def reverse
+    @board.delete_piece(@piece.position)
+    @board.new_piece(@piece.position, @piece)
+  end
 end
 
 class EnPassantIndicate < SimpleMove
+  def initialize(pawn)
+    raise ArgumentError.new("Can only En-Passant indicate a Pawn") if pawn.class != Pawn
+    super(nil, pawn)
+  end
 
+  def execute
+    @piece.en_passant_capturable = true
+  end
+
+  def reverse
+    @piece.en_passant_capturable = false
+  end
 end
 
 class CastlingMove < ComplexMove
@@ -114,13 +138,51 @@ class CastlingMove < ComplexMove
 end
 
 class EnPassantMove < ComplexMove
+  def initialize(board, pawn)
+    raise ArgumentError.new("Pawn can only move two spaces if it has not moved yet") if pawn.num_moves > 0
 
+    upwards = pawn.color == :black ? -2 : 2
+
+    move_pawn = StandardMove.new(board, pawn, Coordinate.new(pawn.position.col, pawn.position.row + upwards))
+    indicate_pawn = EnPassantIndicate.new(pawn)
+
+    super(board, pawn, move_pawn, indicate_pawn)
+  end
 end
 
 class EnPassantCapture < ComplexMove
+  def initialize(board, pawn, target_pawn)
+    raise ArgumentError.new("Target pawn must be marked en-passant capturable") unless target_pawn.en_passant_capturable
 
+    upwards = pawn.color == :black ? -1 : 1
+
+    capture_target = CapturingMove.new(board, pawn, target_pawn)
+    move_up = StandardMove.new(board, pawn, Coordinate.new(target_pawn.position.col, target_pawn.position.row + upwards))
+
+    super(board, pawn, capture_target, move_up)
+  end
 end
 
 class CaptureAndPromote < ComplexMove
+  def initialize(board, pawn, target)
+    end_row = pawn.color == :black ? 0 : 7
+    raise ArgumentError.new("Pawn can only be promoted at the end of the board") unless target.position.row == end_row
 
+    capture_target = CapturingMove.new(board, pawn, target)
+    promote = PromotingMove.new(board, pawn)
+
+    super(board, pawn, capture_target, promote)
+  end
+end
+
+class MoveAndPromote < ComplexMove
+  def initialize(board, pawn, endp)
+    end_row = pawn.color == :black ? 0 : 7
+    raise ArgumentError.new("Pawn can only be promoted at the end of the board") unless endp.row == end_row
+
+    move = StandardMove.new(board, pawn, endp)
+    promote = PromotingMove.new(board, pawn)
+
+    super(board, pawn, move, promote)
+  end
 end

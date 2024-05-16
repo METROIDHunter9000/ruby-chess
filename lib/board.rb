@@ -83,9 +83,18 @@ class Board
   end
 
   def new_piece(position, piece)
+    piece.is_captured = false
     overwrite(position, piece)
     @black_team << piece if piece.color == :black
     @white_team << piece if piece.color == :white
+  end
+
+  def delete_piece(position)
+    piece = index_cartesian(position)
+    piece.is_captured = true
+    @black_team.delete(piece) if piece.color == :black
+    @white_team.delete(piece) if piece.color == :white
+    overwrite(position, nil)
   end
 
   class PieceFactory

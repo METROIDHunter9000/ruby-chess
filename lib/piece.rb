@@ -135,35 +135,35 @@ class Pawn < Piece
     coord_up1 = Coordinate.new(self.position.col, self.position.row + up)
     if coord_up1.valid? 
       piece_up1 = @board.index_cartesian(coord_up1) 
-      moves[coord_up1.to_algebraic] = "promote" if coord_up1.row == row_end
+      moves[coord_up1.to_algebraic] = MoveAndPromote.new(@board, self, coord_up1) if coord_up1.row == row_end
       moves[coord_up1.to_algebraic] = StandardMove.new(@board, self, coord_up1) if coord_up1.row != row_end && piece_up1 == nil
     end
 
     coord_up2 = Coordinate.new(self.position.col, self.position.row + up*2)
-    moves[coord_up2.to_algebraic] = "en-passant move" if coord_up2.valid? && self.num_moves == 0 && @board.index_cartesian(coord_up2) == nil
+    moves[coord_up2.to_algebraic] = EnPassantMove.new(@board, self) if coord_up2.valid? && self.num_moves == 0 && @board.index_cartesian(coord_up2) == nil
 
     coord_left = Coordinate.new(self.position.col - 1, self.position.row)
     coord_right = Coordinate.new(self.position.col + 1, self.position.row)
-    piece_left = @board.index_cartesian(coord_left)
-    piece_right = @board.index_cartesian(coord_right)
-    if piece_left && piece_left.class == Pawn && piece_left.color != self.color && piece_left.en_passant_moved
-      moves[coord_left.to_algebraic] = "en-passant capture"
+    piece_left = @board.index_cartesian(coord_left) if coord_left.valid?
+    piece_right = @board.index_cartesian(coord_right) if coord_right.valid?
+    if piece_left && piece_left.class == Pawn && piece_left.color != self.color && piece_left.en_passant_capturable
+      moves[coord_left.to_algebraic] = EnPassantCapture.new(@board, self, piece_left)
     end
-    if piece_right && piece_right.class == Pawn && piece_right.color != self.color && piece_right.en_passant_moved
-      moves[coord_right.to_algebraic] = "en-passant capture"
+    if piece_right && piece_right.class == Pawn && piece_right.color != self.color && piece_right.en_passant_capturable
+      moves[coord_right.to_algebraic] = EnPassantCapture.new(@board, self, piece_right)
     end
     
     coord_upleft = Coordinate.new(self.position.col - 1, self.position.row + up)
     coord_upright = Coordinate.new(self.position.col + 1, self.position.row + up)
-    piece_upleft = @board.index_cartesian(coord_upleft)
-    piece_upright = @board.index_cartesian(coord_upright)
+    piece_upleft = @board.index_cartesian(coord_upleft) if coord_left.valid?
+    piece_upright = @board.index_cartesian(coord_upright) if coord_right.valid?
     if coord_upleft.valid? && piece_upleft && piece_upleft.color != self.color
       moves[coord_upleft.to_algebraic] = CapturingMove.new(@board, self, piece_upleft) if coord_upleft.row != row_end
-      moves[coord_upleft.to_algebraic] = "capture and promote" if coord_upleft.row == row_end
+      moves[coord_upleft.to_algebraic] = CaptureAndPromote.new(@board, self, piece_upleft) if coord_upleft.row == row_end
     end
     if coord_upright.valid? && piece_upright && piece_upright.color != self.color
       moves[coord_upright.to_algebraic] = CapturingMove.new(@board, self, piece_upright) if coord_upright.row != row_end
-      moves[coord_upright.to_algebraic] = "capture and promote" if coord_upright.row == row_end
+      moves[coord_upright.to_algebraic] = CaptureAndPromote.new(@board, self, piece_upright) if coord_upright.row == row_end
     end
     return moves
   end

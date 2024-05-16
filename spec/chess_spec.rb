@@ -404,4 +404,155 @@ describe Move do
       end
     end
   end
+
+  describe EnPassantMove do
+    before do
+      @board = Board.new_blank
+      @pawnb = Pawn.new(@board, :black)
+      @pawnw = Pawn.new(@board, :white)
+      @board.new_piece(Coordinate.new(0,6), @pawnb)
+      @board.new_piece(Coordinate.new(0,1), @pawnw)
+      @moveb = @pawnb.valid_moves["a5"]
+      @movew = @pawnw.valid_moves["a4"]
+      expect(@moveb.class).to eql EnPassantMove
+      expect(@movew.class).to eql EnPassantMove
+    end
+    describe "#execute" do
+      it "moves a pawn up to spaces and marks it as en_passant_capturable" do
+        @moveb.execute
+        @movew.execute
+
+        expect(@board.index_algebraic("a7")).to eql nil
+        expect(@board.index_algebraic("a2")).to eql nil
+        expect(@board.index_algebraic("a4")).to eql @pawnw
+        expect(@board.index_algebraic("a5")).to eql @pawnb
+        expect(@pawnb.en_passant_capturable).to eql true
+        expect(@pawnw.en_passant_capturable).to eql true
+      end
+    end
+    describe "#reverse" do
+      it "reverses the move" do
+        @moveb.execute
+        @movew.execute
+        @moveb.reverse
+        @movew.reverse
+        
+        expect(@board.index_algebraic("a7")).to eql @pawnb
+        expect(@board.index_algebraic("a2")).to eql @pawnw
+        expect(@board.index_algebraic("a4")).to eql nil
+        expect(@board.index_algebraic("a5")).to eql nil
+        expect(@pawnb.en_passant_capturable).to eql false
+        expect(@pawnw.en_passant_capturable).to eql false
+      end
+    end
+  end
+
+  describe EnPassantCapture do
+    before do
+      @board = Board.new_blank
+      @pawnb = Pawn.new(@board, :black)
+      @pawnw = Pawn.new(@board, :white)
+      @board.new_piece(Coordinate.new(0,6), @pawnb)
+      @board.new_piece(Coordinate.new(1,4), @pawnw)
+    end
+    describe "#execute" do
+      it "captures the target pawn and moves one space ahead of it" do
+        @pawnb.valid_moves["a5"].execute
+        move_pawnw = @pawnw.valid_moves["a5"]
+        move_pawnw.execute
+
+        expect(move_pawnw.class).to eql EnPassantCapture
+        expect(@board.index_algebraic("a7")).to eql nil
+        expect(@pawnb.is_captured).to eql true
+        expect(@board.index_algebraic("a6")).to eql @pawnw
+        expect(@pawnw.position.col).to eql 0
+        expect(@pawnw.position.row).to eql 5
+        expect(@board.index_algebraic("b5")).to eql nil
+        expect(@board.index_algebraic("a5")).to eql nil
+      end
+    end
+    describe "#reverse" do
+      it "reverses the move" do
+        @pawnb.valid_moves["a5"].execute
+        move_pawnw = @pawnw.valid_moves["a5"]
+        move_pawnw.execute
+        move_pawnw.reverse
+
+        expect(move_pawnw.class).to eql EnPassantCapture
+        expect(@board.index_algebraic("a7")).to eql nil
+        expect(@pawnb.is_captured).to eql false
+        expect(@board.index_algebraic("a6")).to eql nil
+        expect(@pawnw.position.col).to eql 1
+        expect(@pawnw.position.row).to eql 4
+        expect(@board.index_algebraic("b5")).to eql @pawnw
+        expect(@board.index_algebraic("a5")).to eql @pawnb
+      end
+    end
+  end
+
+  describe CaptureAndPromote do
+    before do
+      @board = Board.new_blank
+      @pawn = Pawn.new(@board, :black)
+      @knight = Knight.new(@board, :white)
+      @board.new_piece(Coordinate.new(1,1), @pawn)
+      @board.new_piece(Coordinate.new(2,0), @knight)
+      @move = @pawn.valid_moves["c1"]
+      expect(@move.class).to eql CaptureAndPromote
+    end
+    describe "#execute" do
+      it "moves the pawn over the target to capture it and promotes the pawn" do
+        @move.execute
+        queen = @board.index_algebraic("c1")
+
+        expect(queen.class).to eql Queen
+        expect(queen.position.row).to eql 0
+        expect(queen.position.col).to eql 2
+        expect(queen.color).to eql @pawn.color
+        expect(@knight.is_captured).to eql true
+        expect(@board.index_algebraic("b2")).to eql nil
+      end
+    end
+    describe "#reverse" do
+      it "reverses the move" do
+        @move.execute
+        @move.reverse
+        
+        expect(@board.index_algebraic("c1")).to eql @knight
+        expect(@knight.is_captured).to eql false
+        expect(@board.index_algebraic("b2")).to eql @pawn
+      end
+    end
+  end
+  
+  describe MoveAndPromote do
+    before do
+      @board = Board.new_blank
+      @pawn = Pawn.new(@board, :black)
+      @board.new_piece(Coordinate.new(1,1), @pawn)
+      @move = @pawn.valid_moves["b1"]
+      expect(@move.class).to eql MoveAndPromote
+    end
+    describe "#execute" do
+      it "moves the pawn to the end of the board and promotes the pawn" do
+        @move.execute
+        queen = @board.index_algebraic("b1")
+
+        expect(queen.class).to eql Queen
+        expect(queen.position.row).to eql 0
+        expect(queen.position.col).to eql 1
+        expect(queen.color).to eql @pawn.color
+        expect(@board.index_algebraic("b2")).to eql nil
+      end
+    end
+    describe "#reverse" do
+      it "reverses the move" do
+        @move.execute
+        @move.reverse
+        
+        expect(@board.index_algebraic("b1")).to eql nil
+        expect(@board.index_algebraic("b2")).to eql @pawn
+      end
+    end
+  end
 end
