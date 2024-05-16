@@ -1,10 +1,8 @@
 class Move
-  attr_reader :piece, :start, :end
+  attr_reader :piece, :board
 
-  def initialize(piece, start, endp, board)
+  def initialize(board, piece)
     @piece = piece
-    @start = start.clone
-    @end = endp.clone
     @board = board
   end
 
@@ -19,7 +17,36 @@ class Move
   def reverse; end
 end
 
-class StandardMove < Move
+class SimpleMove < Move; end
+
+class ComplexMove < Move
+  private attr_accessor :moves
+
+  def initialize(board, piece, *moves)
+    super(board, piece)
+    @moves = moves
+  end
+
+  def execute
+    @moves.each { |move| move.execute }
+  end
+
+  def reverse
+    @moves.reverse_each { |move| move.reverse }
+  end
+end
+
+class StandardMove < SimpleMove
+  private attr_accessor :start, :end
+
+  def initialize(board, piece, endp)
+    raise ArgumentError.new("Cannot move to position occupied by another piece") if board.index_cartesian(endp)
+
+    super(board, piece)
+    @start = piece.position.clone
+    @end = endp.clone
+  end
+
   def execute
     @board.overwrite(@end, @piece)
     @board.overwrite(@start,nil)
@@ -33,11 +60,14 @@ class StandardMove < Move
   end
 end
 
-class CapturingMove < Move
-  attr_reader :target
-  def initialize (piece, start, endp, target, board)
-    super(piece, start, endp, board)
+class CapturingMove < SimpleMove
+  private attr_accessor :target, :start, :end
+
+  def initialize (board, piece, target)
+    super(board, piece)
     @target = target
+    @start = piece.position.clone
+    @end = target.position.clone
   end
 
   def execute
@@ -55,55 +85,42 @@ class CapturingMove < Move
   end
 end
 
-class CastlingMove < Move
-  attr_reader :king
-  def initialize(rook, start, king, board)
-    # TODO this is causing error
+class PromotingMove < SimpleMove
+
+end
+
+class EnPassantIndicate < SimpleMove
+
+end
+
+class CastlingMove < ComplexMove
+  def initialize(board, rook, king)
     raise ArgumentError.new("King and Rook must be on same row (rank) for a castling move") if king.position.row != rook.position.row
     raise ArgumentError.new("King and Rook cannot castle if either piece has moved") if king.num_moves > 0 || rook.num_moves > 0
 
-    endp = Coordinate.new(king.position.col - 1, king.position.row) if rook.position.col < king.position.col
-    endp = Coordinate.new(king.position.col + 1, king.position.row) if rook.position.col > king.position.col
-
-    super(rook, start, endp, board)
-    @king = king
-    @start_king = king.position.clone
-  end
-
-  def legal?(board)
-    # Override #legal?() because this move presents as only moving the rook
-    # but it actually moves rook and king
-    self.execute
-    legal = !board.self_in_check(@king.position)
-    self.reverse
-    return legal
-  end
-
-  def execute
-    @board.overwrite(@start, nil)
-    @board.overwrite(@start_king, nil)
-    @piece.num_moves += 1
-    @king.num_moves += 1
-    if @piece.position.col < @king.position.col
-      @board.overwrite(Coordinate.new(@king.position.col-1, @king.position.row), @piece)
-      @board.overwrite(Coordinate.new(@king.position.col-2, @king.position.row), @king)
+    if rook.position.col < king.position.col
+      king_end = Coordinate.new(king.position.col - 2, king.position.row)
+      rook_end = Coordinate.new(king.position.col - 1, king.position.row) 
     else
-      @board.overwrite(Coordinate.new(@king.position.col+1, @king.position.row), @piece)
-      @board.overwrite(Coordinate.new(@king.position.col+2, @king.position.row), @king)
+      king_end = Coordinate.new(king.position.col + 2, king.position.row)
+      rook_end = Coordinate.new(king.position.col + 1, king.position.row) 
     end
-  end
 
-  def reverse
-    @board.overwrite(@piece.position, nil)
-    @board.overwrite(@king.position, nil)
-    @board.overwrite(@start, @piece)
-    @board.overwrite(@start_king, @king)
-    @piece.num_moves -= 1
-    @king.num_moves -= 1
+    move_rook = StandardMove.new(board, rook, rook_end)
+    move_king = StandardMove.new(board, king, king_end)
+
+    super(board, rook, move_rook, move_king)
   end
 end
 
-class PromotingMove < Move
+class EnPassantMove < ComplexMove
 
 end
 
+class EnPassantCapture < ComplexMove
+
+end
+
+class CaptureAndPromote < ComplexMove
+
+end
