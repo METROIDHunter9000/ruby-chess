@@ -256,7 +256,58 @@ describe Piece do
     end
 
     context "for a Pawn" do
-      pending
+      before do
+        @board = Board.new_blank
+        @pawnw = Pawn.new(@board, :white)
+        @pawnb = Pawn.new(@board, :black) 
+        @rookw = Rook.new(@board, :white)
+        @rookb = Rook.new(@board, :black)
+        @board.new_piece(Coordinate.new(0,7), @rookb)
+        @board.new_piece(Coordinate.new(7,0), @rookw)
+      end
+
+      it "finds forward moves" do
+        @board.new_piece(Coordinate.new(1,1), @pawnw)
+        @board.new_piece(Coordinate.new(6,6), @pawnb)
+        expect(@pawnw.valid_moves["b3"].class).to eql StandardMove
+        expect(@pawnb.valid_moves["g6"].class).to eql StandardMove
+      end
+
+      it "allows moving 2 spaces if it's your first move" do
+        @board.new_piece(Coordinate.new(1,1), @pawnw)
+        @board.new_piece(Coordinate.new(6,6), @pawnb)
+        move2w = @pawnw.valid_moves["b4"]
+        move2b = @pawnb.valid_moves["g5"]
+        expect(move2w.class).to eql EnPassantMove
+        expect(move2b.class).to eql EnPassantMove
+        move2w.execute
+        move2b.execute
+        expect(@pawnw.valid_moves.include?("b6")).to eql false
+        expect(@pawnb.valid_moves.include?("g3")).to eql false
+      end
+
+      it "finds valid captures" do
+        @board.new_piece(Coordinate.new(2,5), @pawnw)
+        @board.new_piece(Coordinate.new(5,2), @pawnb)
+        @board.new_piece(Coordinate.new(1,6), Knight.new(@board, :black))
+        @board.new_piece(Coordinate.new(6,1), Knight.new(@board, :white))
+        expect(@pawnw.valid_moves["b7"].class).to eql CapturingMove
+        expect(@pawnb.valid_moves["g2"].class).to eql CapturingMove
+      end
+
+      it "promotes your pawn at the end of the board" do
+        @board.new_piece(Coordinate.new(1,6), @pawnw)
+        @board.new_piece(Coordinate.new(6,1), @pawnb)
+        expect(@pawnw.valid_moves["a8"].class).to eql CaptureAndPromote
+        expect(@pawnb.valid_moves["h1"].class).to eql CaptureAndPromote
+      end
+
+      it "can capture a piece at the end of the board and then promote" do
+        @board.new_piece(Coordinate.new(1,6), @pawnw)
+        @board.new_piece(Coordinate.new(6,1), @pawnb)
+        expect(@pawnw.valid_moves["b8"].class).to eql MoveAndPromote
+        expect(@pawnb.valid_moves["g1"].class).to eql MoveAndPromote
+      end
     end
   end
 end
