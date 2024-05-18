@@ -14,13 +14,11 @@ class Board
 
   def self.new_blank
     board = Board.new
-    board.reset_board!
     return board
   end
 
   def self.new_standard
     board = Board.new
-    board.reset_board!
     board.populate_board!
     return board
   end
@@ -34,10 +32,10 @@ class Board
   end
 
   def populate_board!
-    @black_king = King.new(@board, :black)
-    @white_king = King.new(@board, :white)
-    new_piece(Coordinate.new(4,7), @black_king)
-    new_piece(Coordinate.new(4,0), @white_king)
+    black_king = King.new(self, :black)
+    white_king = King.new(self, :white)
+    new_piece(Coordinate.new(4,7), black_king)
+    new_piece(Coordinate.new(4,0), white_king)
 
     queen_ftry = QueenFactory.new(self)
     pawn_ftry = PawnFactory.new(self)
@@ -61,8 +59,8 @@ class Board
     rook_ftry.create_piece(:white, Coordinate.new(7,0))
 
     0.upto 7 do |col|
-      pawn_ftry.create_piece(:white, Coordinate.new(col, 6))
-      pawn_ftry.create_piece(:black, Coordinate.new(col, 1))
+      pawn_ftry.create_piece(:white, Coordinate.new(col, 1))
+      pawn_ftry.create_piece(:black, Coordinate.new(col, 6))
     end
 
   end
@@ -87,6 +85,18 @@ class Board
     overwrite(position, piece)
     @black_team << piece if piece.color == :black
     @white_team << piece if piece.color == :white
+
+    if piece.class == King
+      if piece.color == :white
+        raise RuntimeError.new "Cannot create a second white king!" if @white_king != nil
+        @white_king = piece
+      elsif piece.color == :black
+        raise RuntimeError.new "Cannot create a second black king!" if @black_king != nil
+        @black_king = piece
+      else
+        raise ArgumentError.new "Unrecognized color #{color}"
+      end
+    end
   end
 
   def delete_piece(position)
