@@ -1,4 +1,5 @@
 require_relative './coordinate.rb'
+require 'pry-byebug'
 
 ANSI_ESCAPE_FOREGROUND_BLACK = "\033[38;5;0m".freeze
 
@@ -36,10 +37,12 @@ class Rook < Piece
     moves = Hash.new
     direction.each do |dir|
       delta = dir.clone
+      places_traversed = Array.new
       loop do
         coord = Coordinate.new(self.position.col + delta[0], self.position.row + delta[1])
         break unless coord.valid?
 
+        places_traversed << coord
         piece = @board.index_cartesian(coord)
         if piece
           if piece.color != self.color
@@ -47,7 +50,14 @@ class Rook < Piece
           else
             is_my_king = piece.class == King && piece.color == self.color
             is_our_first_move = piece.num_moves == 0 && 0 == self.num_moves
-            moves[coord.to_algebraic] = CastlingMove.new(@board, self, piece) if is_our_first_move and is_my_king
+            if is_our_first_move and is_my_king
+              enemy_color = self.color == :black ? :white : :black
+              is_move_unsafe = false
+              places_traversed[-3..].each do |place|
+                is_move_unsafe = is_move_unsafe || @board.piece_attacking?(enemy_color, place)
+              end
+              moves[coord.to_algebraic] = CastlingMove.new(@board, self, piece) unless is_move_unsafe
+            end
           end
           break
         else
