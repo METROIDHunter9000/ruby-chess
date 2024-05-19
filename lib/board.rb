@@ -4,7 +4,7 @@ require_relative "./move.rb"
 require 'set'
 
 class Board
-  protected attr_accessor :teams
+  private attr_accessor :teams
   private attr_accessor :kings
 
   private
@@ -28,29 +28,30 @@ class Board
     raise ArgumentError.new("Unrecognized color #{color}")
   end
 
+  def each_piece(color)
+    get_team(color).each { |piece| yield(piece) }
+  end
+
   public
   def initialize
-    reset_board!
+    reset!
   end
 
   def self.new_blank
-    board = Board.new
-    return board
+    Board.new
   end
 
   def self.new_standard
-    board = Board.new
-    board.populate_board!
-    return board
+    Board.new.populate
   end
 
-  def reset_board!
+  def reset!
     @grid = Array.new(8) { Array.new (8) }
     self.teams = {white: Set[], black: Set[]}
     self.kings = {white: nil, black: nil}
   end
 
-  def populate_board!
+  def populate!
     black_king = King.new(self, :black)
     white_king = King.new(self, :white)
     new_piece(Coordinate.new(4,7), black_king)
@@ -81,37 +82,39 @@ class Board
       pawn_ftry.create_piece(:white, Coordinate.new(col, 1))
       pawn_ftry.create_piece(:black, Coordinate.new(col, 6))
     end
-
   end
 
-  def index_algebraic(code)
-    index_cartesian(Coordinate.from_algebraic(code))
+  def populate
+    self.populate!
+    self
   end
 
-  def index_cartesian(coord)
-    raise IndexError.new("Coordinate provided is out of bounds") unless coord.valid?
-    @grid[coord.row][coord.col]
+  def index(pos)
+    pos = Coordinate.from_algebraic(pos) if pos.class == String
+    raise IndexError.new("Position provided is out of bounds") unless pos.valid?
+    @grid[pos.row][pos.col]
   end
 
-  def overwrite(position, piece)
-    @grid[position.row][position.col] = piece
-    piece.position.col = position.col if piece
-    piece.position.row = position.row if piece
+  def overwrite(pos, piece)
+    pos = Coordinate.from_algebraic(pos) if pos.class == String
+    @grid[pos.row][pos.col] = piece
+    piece.position.col = pos.col if piece
+    piece.position.row = pos.row if piece
   end
 
   def new_piece(position, piece)
-    piece.is_captured = false
-    overwrite(position, piece)
-    self.teams[piece.color] << piece
-
     if piece.class == King
       raise RuntimeError.new "Cannot create a second #{piece.color} King!" if self.kings[piece.color]
       self.kings[piece.color] = piece
     end
+
+    piece.is_captured = false
+    overwrite(position, piece)
+    self.teams[piece.color] << piece
   end
 
   def delete_piece(position)
-    piece = index_cartesian(position)
+    piece = index(position)
     raise ArgumentError.new("Cannot capture a king!") if piece.class == King
 
     piece.is_captured = true
@@ -119,35 +122,29 @@ class Board
     overwrite(position, nil)
   end
 
-  def each_piece(color)
-    get_team(color).each { |piece| yield(piece) }
-  end
-
   def pieces_attacking(color, position)
-    position_algebraic = position.class == Coordinate ? position.to_algebraic : position
-    position = position.class == Coordinate ? position : Coordinate.from_algebraic(position)
+    position = position.to_algebraic if position.class == Coordinate
     opposite_color = color == :white ? :black : :white
     decoy = Rook.new(self, opposite_color)
-    original = index_algebraic(position_algebraic)
+    original = index(position)
 
     pieces = Array.new
     overwrite(position, decoy)
     each_piece(color) do |piece|
-      pieces << piece if piece.valid_moves.include? position_algebraic
+      pieces << piece if piece.valid_moves.include? position
     end
     overwrite(position, original)
     return pieces
   end
 
   def piece_attacking?(color, position)
-    position_algebraic = position.class == Coordinate ? position.to_algebraic : position
-    position = position.class == Coordinate ? position : Coordinate.from_algebraic(position)
+    position = position.to_algebraic if position.class == Coordinate
     opposite_color = color == :white ? :black : :white
     decoy = Rook.new(self, opposite_color)
-    original = index_algebraic(position_algebraic)
+    original = index(position)
     overwrite(position, decoy)
     each_piece(color) do |piece|
-      if piece.valid_moves.include? position_algebraic
+      if piece.valid_moves.include? position
         overwrite(position, original)
         return true
       end
@@ -157,7 +154,7 @@ class Board
   end
 
   def self_in_check?(position)
-    piece = index_cartesian(position)
+    piece = index(position)
     king = get_king(piece.color)
     enemy_king = get_enemy_king(piece.color)
     return piece_attacking?(enemy_king.color, king.position)

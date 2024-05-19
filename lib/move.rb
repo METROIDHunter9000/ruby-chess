@@ -41,7 +41,7 @@ class StandardMove < SimpleMove
 
   def initialize(board, piece, endp)
     msg = "Cannot move to position occupied by another piece at #{endp.to_algebraic}"
-    raise ArgumentError.new(msg) if board.index_cartesian(endp)
+    raise ArgumentError.new(msg) if board.index(endp)
 
     super(board, piece)
     @end = endp.clone

@@ -60,7 +60,7 @@ describe Board do
         @board.delete_piece(Coordinate.new(4,1))
         @board.delete_piece(Coordinate.new(3,6))
         @board.delete_piece(Coordinate.new(4,6))
-        @king = @board.index_algebraic("e1")
+        @king = @board.index("e1")
       end
 
       it "returns true if your king is now in check" do

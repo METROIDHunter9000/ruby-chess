@@ -20,10 +20,10 @@ describe Move do
         @move_queen.execute
         @move_knight.execute
 
-        expect(@board.index_algebraic("d4")).to eql nil
-        expect(@board.index_algebraic("d7")).to eql nil
-        expect(@board.index_algebraic("g4")).to eql @queen
-        expect(@board.index_algebraic("c5")).to eql @knight
+        expect(@board.index("d4")).to eql nil
+        expect(@board.index("d7")).to eql nil
+        expect(@board.index("g4")).to eql @queen
+        expect(@board.index("c5")).to eql @knight
 
         expect(@queen.num_moves).to eql 1
         expect(@knight.num_moves).to eql 1
@@ -36,10 +36,10 @@ describe Move do
         @move_queen.reverse
         @move_knight.reverse
 
-        expect(@board.index_algebraic("d4")).to eql @queen
-        expect(@board.index_algebraic("d7")).to eql @knight
-        expect(@board.index_algebraic("g4")).to eql nil
-        expect(@board.index_algebraic("c5")).to eql nil
+        expect(@board.index("d4")).to eql @queen
+        expect(@board.index("d7")).to eql @knight
+        expect(@board.index("g4")).to eql nil
+        expect(@board.index("c5")).to eql nil
 
         expect(@queen.num_moves).to eql 0
         expect(@knight.num_moves).to eql 0
@@ -68,14 +68,14 @@ describe Move do
         @castle_white.execute
         @castle_black.execute
 
-        expect(@board.index_algebraic("d1")).to eql @rook1
-        expect(@board.index_algebraic("c1")).to eql @king1
-        expect(@board.index_algebraic("f8")).to eql @rook2
-        expect(@board.index_algebraic("g8")).to eql @king2
-        expect(@board.index_algebraic("a1")).to eql nil
-        expect(@board.index_algebraic("e1")).to eql nil
-        expect(@board.index_algebraic("e8")).to eql nil
-        expect(@board.index_algebraic("h8")).to eql nil
+        expect(@board.index("d1")).to eql @rook1
+        expect(@board.index("c1")).to eql @king1
+        expect(@board.index("f8")).to eql @rook2
+        expect(@board.index("g8")).to eql @king2
+        expect(@board.index("a1")).to eql nil
+        expect(@board.index("e1")).to eql nil
+        expect(@board.index("e8")).to eql nil
+        expect(@board.index("h8")).to eql nil
 
         expect(@rook1.num_moves).to eql 1
         expect(@rook2.num_moves).to eql 1
@@ -90,14 +90,14 @@ describe Move do
         @castle_white.reverse
         @castle_black.reverse
 
-        expect(@board.index_algebraic("d1")).to eql nil
-        expect(@board.index_algebraic("c1")).to eql nil
-        expect(@board.index_algebraic("f8")).to eql nil
-        expect(@board.index_algebraic("g8")).to eql nil
-        expect(@board.index_algebraic("a1")).to eql @rook1
-        expect(@board.index_algebraic("e1")).to eql @king1
-        expect(@board.index_algebraic("e8")).to eql @king2
-        expect(@board.index_algebraic("h8")).to eql @rook2
+        expect(@board.index("d1")).to eql nil
+        expect(@board.index("c1")).to eql nil
+        expect(@board.index("f8")).to eql nil
+        expect(@board.index("g8")).to eql nil
+        expect(@board.index("a1")).to eql @rook1
+        expect(@board.index("e1")).to eql @king1
+        expect(@board.index("e8")).to eql @king2
+        expect(@board.index("h8")).to eql @rook2
 
         expect(@rook1.num_moves).to eql 0
         expect(@rook2.num_moves).to eql 0
@@ -121,8 +121,8 @@ describe Move do
       it "moves a piece on top of an enemy piece and captures it" do
         @capture.execute
 
-        expect(@board.index_algebraic("a7")).to eql @rook
-        expect(@board.index_algebraic("a1")).to eql nil
+        expect(@board.index("a7")).to eql @rook
+        expect(@board.index("a1")).to eql nil
 
         expect(@pawn.num_moves).to eql 0
         expect(@pawn.is_captured).to eql true
@@ -135,8 +135,8 @@ describe Move do
         @capture.execute
         @capture.reverse
 
-        expect(@board.index_algebraic("a7")).to eql @pawn
-        expect(@board.index_algebraic("a1")).to eql @rook
+        expect(@board.index("a7")).to eql @pawn
+        expect(@board.index("a1")).to eql @rook
 
         expect(@pawn.num_moves).to eql 0
         expect(@pawn.is_captured).to eql false
@@ -163,10 +163,10 @@ describe Move do
         @moveb.execute
         @movew.execute
 
-        expect(@board.index_algebraic("a7")).to eql nil
-        expect(@board.index_algebraic("a2")).to eql nil
-        expect(@board.index_algebraic("a4")).to eql @pawnw
-        expect(@board.index_algebraic("a5")).to eql @pawnb
+        expect(@board.index("a7")).to eql nil
+        expect(@board.index("a2")).to eql nil
+        expect(@board.index("a4")).to eql @pawnw
+        expect(@board.index("a5")).to eql @pawnb
         expect(@pawnb.en_passant_capturable).to eql true
         expect(@pawnw.en_passant_capturable).to eql true
       end
@@ -178,10 +178,10 @@ describe Move do
         @moveb.reverse
         @movew.reverse
         
-        expect(@board.index_algebraic("a7")).to eql @pawnb
-        expect(@board.index_algebraic("a2")).to eql @pawnw
-        expect(@board.index_algebraic("a4")).to eql nil
-        expect(@board.index_algebraic("a5")).to eql nil
+        expect(@board.index("a7")).to eql @pawnb
+        expect(@board.index("a2")).to eql @pawnw
+        expect(@board.index("a4")).to eql nil
+        expect(@board.index("a5")).to eql nil
         expect(@pawnb.en_passant_capturable).to eql false
         expect(@pawnw.en_passant_capturable).to eql false
       end
@@ -203,13 +203,13 @@ describe Move do
         move_pawnw.execute
 
         expect(move_pawnw.class).to eql EnPassantCapture
-        expect(@board.index_algebraic("a7")).to eql nil
+        expect(@board.index("a7")).to eql nil
         expect(@pawnb.is_captured).to eql true
-        expect(@board.index_algebraic("a6")).to eql @pawnw
+        expect(@board.index("a6")).to eql @pawnw
         expect(@pawnw.position.col).to eql 0
         expect(@pawnw.position.row).to eql 5
-        expect(@board.index_algebraic("b5")).to eql nil
-        expect(@board.index_algebraic("a5")).to eql nil
+        expect(@board.index("b5")).to eql nil
+        expect(@board.index("a5")).to eql nil
       end
     end
     describe "#reverse" do
@@ -220,13 +220,13 @@ describe Move do
         move_pawnw.reverse
 
         expect(move_pawnw.class).to eql EnPassantCapture
-        expect(@board.index_algebraic("a7")).to eql nil
+        expect(@board.index("a7")).to eql nil
         expect(@pawnb.is_captured).to eql false
-        expect(@board.index_algebraic("a6")).to eql nil
+        expect(@board.index("a6")).to eql nil
         expect(@pawnw.position.col).to eql 1
         expect(@pawnw.position.row).to eql 4
-        expect(@board.index_algebraic("b5")).to eql @pawnw
-        expect(@board.index_algebraic("a5")).to eql @pawnb
+        expect(@board.index("b5")).to eql @pawnw
+        expect(@board.index("a5")).to eql @pawnb
       end
     end
   end
@@ -244,14 +244,14 @@ describe Move do
     describe "#execute" do
       it "moves the pawn over the target to capture it and promotes the pawn" do
         @move.execute
-        queen = @board.index_algebraic("c1")
+        queen = @board.index("c1")
 
         expect(queen.class).to eql Queen
         expect(queen.position.row).to eql 0
         expect(queen.position.col).to eql 2
         expect(queen.color).to eql @pawn.color
         expect(@knight.is_captured).to eql true
-        expect(@board.index_algebraic("b2")).to eql nil
+        expect(@board.index("b2")).to eql nil
       end
     end
     describe "#reverse" do
@@ -259,9 +259,9 @@ describe Move do
         @move.execute
         @move.reverse
         
-        expect(@board.index_algebraic("c1")).to eql @knight
+        expect(@board.index("c1")).to eql @knight
         expect(@knight.is_captured).to eql false
-        expect(@board.index_algebraic("b2")).to eql @pawn
+        expect(@board.index("b2")).to eql @pawn
       end
     end
   end
@@ -277,13 +277,13 @@ describe Move do
     describe "#execute" do
       it "moves the pawn to the end of the board and promotes the pawn" do
         @move.execute
-        queen = @board.index_algebraic("b1")
+        queen = @board.index("b1")
 
         expect(queen.class).to eql Queen
         expect(queen.position.row).to eql 0
         expect(queen.position.col).to eql 1
         expect(queen.color).to eql @pawn.color
-        expect(@board.index_algebraic("b2")).to eql nil
+        expect(@board.index("b2")).to eql nil
       end
     end
     describe "#reverse" do
@@ -291,8 +291,8 @@ describe Move do
         @move.execute
         @move.reverse
         
-        expect(@board.index_algebraic("b1")).to eql nil
-        expect(@board.index_algebraic("b2")).to eql @pawn
+        expect(@board.index("b1")).to eql nil
+        expect(@board.index("b2")).to eql @pawn
       end
     end
   end

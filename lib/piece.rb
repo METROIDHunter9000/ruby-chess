@@ -43,7 +43,7 @@ class Rook < Piece
         break unless coord.valid?
 
         places_traversed << coord
-        piece = @board.index_cartesian(coord)
+        piece = @board.index(coord)
         if piece
           if piece.color != self.color
             moves[coord.to_algebraic] = CapturingMove.new(@board, self, piece) 
@@ -88,7 +88,7 @@ class Bishop < Piece
         coord = Coordinate.new(self.position.col + delta[0], self.position.row + delta[1])
         break unless coord.valid?
 
-        piece = @board.index_cartesian(coord)
+        piece = @board.index(coord)
         if piece
           moves[coord.to_algebraic] = CapturingMove.new(@board, self, piece) if piece.color != self.color
           break
@@ -117,7 +117,7 @@ class Knight < Piece
     moves_relative.each do |move|
       coord = Coordinate.new(self.position.col + move[0], self.position.row + move[1])
       next unless coord.valid?
-      piece = @board.index_cartesian(coord)
+      piece = @board.index(coord)
       moves[coord.to_algebraic] = StandardMove.new(@board, self, coord) unless piece
       moves[coord.to_algebraic] = CapturingMove.new(@board, self, piece) if piece && piece.color != self.color
     end
@@ -144,18 +144,18 @@ class Pawn < Piece
 
     coord_up1 = Coordinate.new(self.position.col, self.position.row + up)
     if coord_up1.valid? 
-      piece_up1 = @board.index_cartesian(coord_up1) 
+      piece_up1 = @board.index(coord_up1) 
       moves[coord_up1.to_algebraic] = MoveAndPromote.new(@board, self, coord_up1) if coord_up1.row == row_end
       moves[coord_up1.to_algebraic] = StandardMove.new(@board, self, coord_up1) if coord_up1.row != row_end && piece_up1 == nil
     end
 
     coord_up2 = Coordinate.new(self.position.col, self.position.row + up*2)
-    moves[coord_up2.to_algebraic] = EnPassantMove.new(@board, self) if coord_up2.valid? && self.num_moves == 0 && @board.index_cartesian(coord_up2) == nil
+    moves[coord_up2.to_algebraic] = EnPassantMove.new(@board, self) if coord_up2.valid? && self.num_moves == 0 && @board.index(coord_up2) == nil
 
     coord_left = Coordinate.new(self.position.col - 1, self.position.row)
     coord_right = Coordinate.new(self.position.col + 1, self.position.row)
-    piece_left = @board.index_cartesian(coord_left) if coord_left.valid?
-    piece_right = @board.index_cartesian(coord_right) if coord_right.valid?
+    piece_left = @board.index(coord_left) if coord_left.valid?
+    piece_right = @board.index(coord_right) if coord_right.valid?
     if piece_left && piece_left.class == Pawn && piece_left.color != self.color && piece_left.en_passant_capturable
       moves[coord_left.to_algebraic] = EnPassantCapture.new(@board, self, piece_left)
     end
@@ -165,8 +165,8 @@ class Pawn < Piece
     
     coord_upleft = Coordinate.new(self.position.col - 1, self.position.row + up)
     coord_upright = Coordinate.new(self.position.col + 1, self.position.row + up)
-    piece_upleft = @board.index_cartesian(coord_upleft) if coord_left.valid?
-    piece_upright = @board.index_cartesian(coord_upright) if coord_right.valid?
+    piece_upleft = @board.index(coord_upleft) if coord_left.valid?
+    piece_upright = @board.index(coord_upright) if coord_right.valid?
     if coord_upleft.valid? && piece_upleft && piece_upleft.color != self.color
       moves[coord_upleft.to_algebraic] = CapturingMove.new(@board, self, piece_upleft) if coord_upleft.row != row_end
       moves[coord_upleft.to_algebraic] = CaptureAndPromote.new(@board, self, piece_upleft) if coord_upleft.row == row_end
@@ -193,7 +193,7 @@ class King < Piece
     moves_relative.each do |move|
       coord = Coordinate.new(self.position.col + move[0], self.position.row + move[1])
       next unless coord.valid?
-      piece = @board.index_cartesian(coord)
+      piece = @board.index(coord)
       moves[coord.to_algebraic] = StandardMove.new(@board, self, coord) unless piece
       moves[coord.to_algebraic] = CapturingMove.new(@board, self, piece) if piece && piece.color != self.color
     end
@@ -218,7 +218,7 @@ class Queen < Piece
         coord = Coordinate.new(self.position.col + delta[0], self.position.row + delta[1])
         break unless coord.valid?
 
-        piece = @board.index_cartesian(coord)
+        piece = @board.index(coord)
         if piece
           moves[coord.to_algebraic] = CapturingMove.new(@board, self, piece) if piece.color != self.color
           break
