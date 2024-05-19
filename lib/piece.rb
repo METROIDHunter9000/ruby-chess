@@ -21,6 +21,10 @@ class Piece
   public
   def valid_moves; end
 
+  def legal_moves
+    self.valid_moves.reject {|pos, move| !move.legal?}
+  end
+
   def to_s 
     "#{icon}"
   end

@@ -168,7 +168,7 @@ class Board
 
   def player_in_mate?(color)
     each_piece(color) do |piece|
-      return false if piece.valid_moves.reject {|pos, move| !move.legal?}.length > 0
+      return false if piece.legal_moves.length > 0
     end
     return true 
   end
