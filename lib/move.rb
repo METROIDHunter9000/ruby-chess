@@ -8,7 +8,7 @@ class Move
 
   def legal?
     new_pos = self.execute
-    legal = !board.self_in_check(new_pos)
+    legal = !board.self_in_check?(new_pos)
     self.reverse
     return legal
   end
@@ -52,12 +52,14 @@ class StandardMove < SimpleMove
     @board.overwrite(@end, @piece)
     @board.overwrite(@start,nil)
     @piece.num_moves += 1
+    return @end.clone
   end
 
   def reverse
     @board.overwrite(@start, @piece)
     @board.overwrite(@end,nil)
     @piece.num_moves -= 1
+    return @start
   end
 end
 
@@ -76,12 +78,19 @@ class CapturingMove < SimpleMove
     @board.overwrite(@start, nil)
     @board.overwrite(@end, @piece)
     @piece.num_moves += 1
+    return @end.clone
+  end
+
+  def legal?
+    return true if @target.class == King
+    super
   end
 
   def reverse
     @board.overwrite(@start, @piece)
     @piece.num_moves -= 1
     @board.new_piece(@end, @target)
+    return @start
   end
 end
 
@@ -95,11 +104,13 @@ class PromotingMove < SimpleMove
     new_queen = Queen.new(board, @piece.color, @piece.position.clone)
     @board.delete_piece(@piece.position)
     @board.new_piece(@piece.position, new_queen)
+    return @piece.position.clone
   end
 
   def reverse
     @board.delete_piece(@piece.position)
     @board.new_piece(@piece.position, @piece)
+    return @piece.position
   end
 end
 
@@ -111,10 +122,12 @@ class EnPassantIndicate < SimpleMove
 
   def execute
     @piece.en_passant_capturable = true
+    return @piece.position.clone
   end
 
   def reverse
     @piece.en_passant_capturable = false
+    return @piece.position
   end
 end
 

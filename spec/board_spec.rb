@@ -65,12 +65,12 @@ describe Board do
 
       it "returns true if your king is now in check" do
         @king.valid_moves["d2"].execute
-        expect(@board.self_in_check?(@king)).to eql true
+        expect(@board.self_in_check?(@king.position)).to eql true
       end
 
       it "returns false if your king is not in check" do
         @king.valid_moves["e2"].execute
-        expect(@board.self_in_check?(@king)).to eql false
+        expect(@board.self_in_check?(@king.position)).to eql false
       end
     end
 
@@ -78,12 +78,15 @@ describe Board do
       before do
         @board = Board.new_blank
         @king = King.new(@board, :white)
+        @kingb = King.new(@board, :black)
         @rookw = Rook.new(@board, :white)
         @rookw.num_moves = 2
         @rookb = Rook.new(@board, :black)
+        @rookb.num_moves = 2
         @board.new_piece(Coordinate.new(4,0), @king)
+        @board.new_piece(Coordinate.new(4,7), @kingb)
         @board.new_piece(Coordinate.new(4,1), @rookw)
-        @board.new_piece(Coordinate.new(4,7), @rookb)
+        @board.new_piece(Coordinate.new(4,6), @rookb)
         @board.new_piece(Coordinate.new(0,3), Pawn.new(@board, :black))
         @board.new_piece(Coordinate.new(0,2), Pawn.new(@board, :black))
         @board.new_piece(Coordinate.new(2,1), Queen.new(@board, :black))
@@ -91,16 +94,16 @@ describe Board do
 
       it "returns true if you put your king into check" do
         @rookw.valid_moves["d2"].execute
-        expect(@board.self_in_check?(@rookw)).to eql true
+        expect(@board.self_in_check?(@rookw.position)).to eql true
       end
 
       it "returns false if your king is not in check" do
         @rookw.valid_moves["e5"].execute
-        expect(@board.self_in_check?(@rookw)).to eql false
-        @rookw.valid_moves["e8"].execute
-        expect(@board.self_in_check?(@rookw)).to eql false
-        @rookw.valid_moves["a8"].execute
-        expect(@board.self_in_check?(@rookw)).to eql false
+        expect(@board.self_in_check?(@rookw.position)).to eql false
+        @rookw.valid_moves["e7"].execute
+        expect(@board.self_in_check?(@rookw.position)).to eql false
+        @rookw.valid_moves["a7"].execute
+        expect(@board.self_in_check?(@rookw.position)).to eql false
       end
     end
   end
@@ -109,12 +112,18 @@ describe Board do
     before do
       @board = Board.new_blank
       @king = King.new(@board, :white)
+      @kingb = King.new(@board, :black)
       @rookw = Rook.new(@board, :white)
       @rookw.num_moves = 2
+      @rookb1 = Rook.new(@board, :black)
+      @rookb1.num_moves = 2
+      @rookb2 = Rook.new(@board, :black)
+      @rookb2.num_moves = 2
       @board.new_piece(Coordinate.new(4,0), @king)
+      @board.new_piece(Coordinate.new(4,7), @kingb)
       @board.new_piece(Coordinate.new(0,1), @rookw)
-      @board.new_piece(Coordinate.new(0,0), Rook.new(@board, :black))
-      @board.new_piece(Coordinate.new(4,6), Rook.new(@board, :black))
+      @board.new_piece(Coordinate.new(0,0), @rookb1)
+      @board.new_piece(Coordinate.new(4,6), @rookb2)
       @board.new_piece(Coordinate.new(2,3), Queen.new(@board, :black))
     end
     it "return a list of all of your pieces that are putting the enemy's king in check" do
@@ -130,9 +139,11 @@ describe Board do
   describe "#player_in_mate" do
     before do
       @board = Board.new_blank
+      @rookb = Rook.new(@board, :black)
+      @rookb.num_moves = 2
       @board.new_piece(Coordinate.new(7,7), King.new(@board, :white))
-      @board.new_piece(Coordinate.new(7,6), King.new(@board, :black))
-      @board.new_piece(Coordinate.new(4,7), Rook.new(@board, :black))
+      @board.new_piece(Coordinate.new(7,5), King.new(@board, :black))
+      @board.new_piece(Coordinate.new(4,7), @rookb)
     end
     it "returns true if the specified player cannot perform any legal move" do
       expect(@board.player_in_mate?(:white)).to eql true

@@ -7,6 +7,37 @@ class Board
   protected attr_accessor :black_team, :white_team
   private attr_accessor :black_king, :white_king
 
+  private
+  def get_team(color)
+    if color == :white
+      return @white_team
+    elsif color == :black
+      return @black_team
+    else
+      raise ArgumentError.new("Unrecognized color #{color}")
+    end
+  end
+
+  def get_enemy_king(color)
+    if color == :white
+      return @black_king
+    elsif color == :black
+      return @white_king
+    else
+      raise ArgumentError.new("Unrecognized color #{color}")
+    end
+  end
+
+  def get_king(color)
+    if color == :white
+      return @white_king
+    elsif color == :black
+      return @black_king
+    else
+      raise ArgumentError.new("Unrecognized color #{color}")
+    end
+  end
+
   public
   def initialize
     reset_board!
@@ -101,10 +132,69 @@ class Board
 
   def delete_piece(position)
     piece = index_cartesian(position)
+    raise ArgumentError.new("Cannot capture a king!") if piece == @black_king || piece == @white_king
+
     piece.is_captured = true
     @black_team.delete(piece) if piece.color == :black
     @white_team.delete(piece) if piece.color == :white
     overwrite(position, nil)
+  end
+
+  def each_piece(color)
+    get_team(color).each { |piece| yield(piece) }
+  end
+
+  def pieces_attacking(color, position)
+    position_algebraic = position.class == Coordinate ? position.to_algebraic : position
+    position = position.class == Coordinate ? position : Coordinate.from_algebraic(position)
+    opposite_color = color == :white ? :black : :white
+    decoy = Rook.new(self, opposite_color)
+    original = index_algebraic(position_algebraic)
+
+    pieces = Array.new
+    overwrite(position, decoy)
+    each_piece(color) do |piece|
+      pieces << piece if piece.valid_moves.include? position_algebraic
+    end
+    overwrite(position, original)
+    return pieces
+  end
+
+  def piece_attacking?(color, position)
+    position_algebraic = position.class == Coordinate ? position.to_algebraic : position
+    position = position.class == Coordinate ? position : Coordinate.from_algebraic(position)
+    opposite_color = color == :white ? :black : :white
+    decoy = Rook.new(self, opposite_color)
+    original = index_algebraic(position_algebraic)
+    overwrite(position, decoy)
+    each_piece(color) do |piece|
+      if piece.valid_moves.include? position_algebraic
+        overwrite(position, original)
+        return true
+      end
+    end
+    overwrite(position, original)
+    return false
+  end
+
+  def self_in_check?(position)
+    piece = index_cartesian(position)
+    king = get_king(piece.color)
+    enemy_king = get_enemy_king(piece.color)
+    return piece_attacking?(enemy_king.color, king.position)
+  end
+
+  def enemy_in_check(color)
+    king = get_king(color)
+    enemy_king = get_enemy_king(color)
+    return pieces_attacking(color, enemy_king.position)
+  end
+
+  def player_in_mate?(color)
+    each_piece(color) do |piece|
+      return false if piece.valid_moves.reject {|pos, move| !move.legal?}.length > 0
+    end
+    return true 
   end
 
   class PieceFactory
