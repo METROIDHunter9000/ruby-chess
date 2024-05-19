@@ -4,38 +4,28 @@ require_relative "./move.rb"
 require 'set'
 
 class Board
-  protected attr_accessor :black_team, :white_team
-  private attr_accessor :black_king, :white_king
+  protected attr_accessor :teams
+  private attr_accessor :kings
 
   private
   def get_team(color)
-    if color == :white
-      return @white_team
-    elsif color == :black
-      return @black_team
-    else
-      raise ArgumentError.new("Unrecognized color #{color}")
-    end
+    return self.teams[color] if color == :white or color == :black
+    raise ArgumentError.new("Unrecognized color #{color}")
   end
 
   def get_enemy_king(color)
     if color == :white
-      return @black_king
+      return self.kings[:black]
     elsif color == :black
-      return @white_king
+      return self.kings[:white]
     else
       raise ArgumentError.new("Unrecognized color #{color}")
     end
   end
 
   def get_king(color)
-    if color == :white
-      return @white_king
-    elsif color == :black
-      return @black_king
-    else
-      raise ArgumentError.new("Unrecognized color #{color}")
-    end
+    return self.kings[color] if color == :white or color == :black
+    raise ArgumentError.new("Unrecognized color #{color}")
   end
 
   public
@@ -56,10 +46,8 @@ class Board
 
   def reset_board!
     @grid = Array.new(8) { Array.new (8) }
-    @black_team = Set[]
-    @white_team = Set[]
-    @black_king = nil
-    @white_king = nil
+    self.teams = {white: Set[], black: Set[]}
+    self.kings = {white: nil, black: nil}
   end
 
   def populate_board!
@@ -114,29 +102,20 @@ class Board
   def new_piece(position, piece)
     piece.is_captured = false
     overwrite(position, piece)
-    @black_team << piece if piece.color == :black
-    @white_team << piece if piece.color == :white
+    self.teams[piece.color] << piece
 
     if piece.class == King
-      if piece.color == :white
-        raise RuntimeError.new "Cannot create a second white king!" if @white_king != nil
-        @white_king = piece
-      elsif piece.color == :black
-        raise RuntimeError.new "Cannot create a second black king!" if @black_king != nil
-        @black_king = piece
-      else
-        raise ArgumentError.new "Unrecognized color #{color}"
-      end
+      raise RuntimeError.new "Cannot create a second #{piece.color} King!" if self.kings[piece.color]
+      self.kings[piece.color] = piece
     end
   end
 
   def delete_piece(position)
     piece = index_cartesian(position)
-    raise ArgumentError.new("Cannot capture a king!") if piece == @black_king || piece == @white_king
+    raise ArgumentError.new("Cannot capture a king!") if piece.class == King
 
     piece.is_captured = true
-    @black_team.delete(piece) if piece.color == :black
-    @white_team.delete(piece) if piece.color == :white
+    self.teams[piece.color].delete(piece)
     overwrite(position, nil)
   end
 
