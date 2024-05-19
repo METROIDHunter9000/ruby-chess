@@ -13,21 +13,6 @@ class Board
     raise ArgumentError.new("Unrecognized color #{color}")
   end
 
-  def get_enemy_king(color)
-    if color == :white
-      return self.kings[:black]
-    elsif color == :black
-      return self.kings[:white]
-    else
-      raise ArgumentError.new("Unrecognized color #{color}")
-    end
-  end
-
-  def get_king(color)
-    return self.kings[color] if color == :white or color == :black
-    raise ArgumentError.new("Unrecognized color #{color}")
-  end
-
   def each_piece(color)
     get_team(color).each { |piece| yield(piece) }
   end
@@ -100,6 +85,21 @@ class Board
     @grid[pos.row][pos.col] = piece
     piece.position.col = pos.col if piece
     piece.position.row = pos.row if piece
+  end
+
+  def get_enemy_king(color)
+    if color == :white
+      return self.kings[:black]
+    elsif color == :black
+      return self.kings[:white]
+    else
+      raise ArgumentError.new("Unrecognized color #{color}")
+    end
+  end
+
+  def get_king(color)
+    return self.kings[color] if color == :white or color == :black
+    raise ArgumentError.new("Unrecognized color #{color}")
   end
 
   def new_piece(position, piece)
