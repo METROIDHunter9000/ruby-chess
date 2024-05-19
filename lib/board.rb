@@ -13,10 +13,6 @@ class Board
     raise ArgumentError.new("Unrecognized color #{color}")
   end
 
-  def each_piece(color)
-    get_team(color).each { |piece| yield(piece) }
-  end
-
   public
   def initialize
     reset!
@@ -100,6 +96,10 @@ class Board
   def get_king(color)
     return self.kings[color] if color == :white or color == :black
     raise ArgumentError.new("Unrecognized color #{color}")
+  end
+
+  def each_piece(color)
+    get_team(color).each { |piece| yield(piece) }
   end
 
   def new_piece(position, piece)

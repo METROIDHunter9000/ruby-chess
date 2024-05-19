@@ -55,6 +55,11 @@ class Game
     loop do
       player = players[0]
 
+      #reset en_passant_capturable on all of the player's pawns
+      @board.each_piece(player) do |piece|
+        piece.en_passant_capturable = false if piece.class == Pawn
+      end
+
       #if player is in check, create board highlights and print warning
       checking = @board.pieces_checking(players[1])
       highlights = Array.new
