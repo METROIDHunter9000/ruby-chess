@@ -108,7 +108,7 @@ describe Board do
     end
   end
 
-  describe "#enemy_in_check" do
+  describe "#pieces_checking" do
     before do
       @board = Board.new_blank
       @king = King.new(@board, :white)
@@ -127,12 +127,12 @@ describe Board do
       @board.new_piece(Coordinate.new(2,3), Queen.new(@board, :black))
     end
     it "return a list of all of your pieces that are putting the enemy's king in check" do
-      expect(@board.enemy_in_check(:black).length).to eql 2
+      expect(@board.pieces_checking(:black).length).to eql 2
     end
     it "returns an empty list if you are not checking the enemy's king" do
       @board.delete_piece(Coordinate.new(4,6))
       @board.delete_piece(Coordinate.new(0,0))
-      expect(@board.enemy_in_check(:black).length).to eql 0
+      expect(@board.pieces_checking(:black).length).to eql 0
     end
   end
 

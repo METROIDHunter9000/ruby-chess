@@ -160,7 +160,7 @@ class Board
     return piece_attacking?(enemy_king.color, king.position)
   end
 
-  def enemy_in_check(color)
+  def pieces_checking(color)
     king = get_king(color)
     enemy_king = get_enemy_king(color)
     return pieces_attacking(color, enemy_king.position)
