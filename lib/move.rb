@@ -40,9 +40,6 @@ class StandardMove < SimpleMove
   private attr_accessor :start, :end
 
   def initialize(board, piece, endp)
-    msg = "Cannot move to position occupied by another piece at #{endp.to_algebraic}"
-    raise ArgumentError.new(msg) if board.index(endp)
-
     super(board, piece)
     @end = endp.clone
   end
@@ -116,7 +113,6 @@ end
 
 class EnPassantIndicate < SimpleMove
   def initialize(pawn)
-    raise ArgumentError.new("Can only En-Passant indicate a Pawn") if pawn.class != Pawn
     super(nil, pawn)
   end
 
@@ -133,9 +129,6 @@ end
 
 class CastlingMove < ComplexMove
   def initialize(board, rook, king)
-    raise ArgumentError.new("King and Rook must be on same row (rank) for a castling move") if king.position.row != rook.position.row
-    raise ArgumentError.new("King and Rook cannot castle if either piece has moved") if king.num_moves > 0 || rook.num_moves > 0
-
     if rook.position.col < king.position.col
       king_end = Coordinate.new(king.position.col - 2, king.position.row)
       rook_end = Coordinate.new(king.position.col - 1, king.position.row) 
@@ -153,8 +146,6 @@ end
 
 class EnPassantMove < ComplexMove
   def initialize(board, pawn)
-    raise ArgumentError.new("Pawn can only move two spaces if it has not moved yet") if pawn.num_moves > 0
-
     upwards = pawn.color == :black ? -2 : 2
 
     move_pawn = StandardMove.new(board, pawn, Coordinate.new(pawn.position.col, pawn.position.row + upwards))
@@ -166,8 +157,6 @@ end
 
 class EnPassantCapture < ComplexMove
   def initialize(board, pawn, target_pawn)
-    raise ArgumentError.new("Target pawn must be marked en-passant capturable") unless target_pawn.en_passant_capturable
-
     upwards = pawn.color == :black ? -1 : 1
 
     capture_target = CapturingMove.new(board, pawn, target_pawn)
@@ -180,8 +169,6 @@ end
 class CaptureAndPromote < ComplexMove
   def initialize(board, pawn, target)
     end_row = pawn.color == :black ? 0 : 7
-    raise ArgumentError.new("Pawn can only be promoted at the end of the board") unless target.position.row == end_row
-
     capture_target = CapturingMove.new(board, pawn, target)
     promote = PromotingMove.new(board, pawn)
 
@@ -192,8 +179,6 @@ end
 class MoveAndPromote < ComplexMove
   def initialize(board, pawn, endp)
     end_row = pawn.color == :black ? 0 : 7
-    raise ArgumentError.new("Pawn can only be promoted at the end of the board") unless endp.row == end_row
-
     move = StandardMove.new(board, pawn, endp)
     promote = PromotingMove.new(board, pawn)
 
