@@ -16,9 +16,8 @@ class BoardDisplay
     @board = board
   end
 
-  def display(*highlights)
-    display_column_labels
-    7.downto 0 do |row|
+  def display(flipped: false, highlights: Array.new)
+    print_proc = Proc.new do |row|
       print "#{row+1} "
       0.upto 7 do |col|
         is_dark = (row + col) % 2 == 0
@@ -34,6 +33,13 @@ class BoardDisplay
         print "\033[48;5;#{color}m #{piece_str} \e[0m"
       end
       puts " #{row+1} "
+    end
+
+    display_column_labels
+    if flipped
+      0.upto(7) { |row| print_proc.call(row) }
+    else
+      7.downto(0) { |row| print_proc.call(row) }
     end
     display_column_labels
     print "\n"
