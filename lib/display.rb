@@ -29,7 +29,7 @@ class BoardDisplay
         highlight = highlights.find {|highlight| highlight.positions.include?(pos)}
         color = is_dark ? "#{highlight.dark_color}" : "#{highlight.light_color}" if highlight
 
-        piece = @board.index_cartesian(coordinate)
+        piece = @board.index(coordinate)
         piece_str = piece != nil ? piece.to_s : " "
         print "\033[48;5;#{color}m #{piece_str} \e[0m"
       end
