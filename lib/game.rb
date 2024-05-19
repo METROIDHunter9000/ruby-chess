@@ -88,7 +88,8 @@ class Game
 
       #display board w/ legal moves (& still with king in check and by whom)
       move_highlights = Highlight.new(moves.keys, "19", "27")
-      @display.display(flipped: player == :black, highlights: [move_highlights])
+      selected_highlight = Highlight.new(piece.position.to_algebraic, "28", "28")
+      @display.display(flipped: player == :black, highlights: [move_highlights, selected_highlight])
 
       #input: location to move to (must be in legal moves)
       puts "Choose a move to execute for the piece you selected:"
