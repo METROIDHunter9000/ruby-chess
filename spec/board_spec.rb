@@ -65,12 +65,12 @@ describe Board do
 
       it "returns true if your king is now in check" do
         @king.valid_moves["d2"].execute
-        expect(@board.self_in_check?(@king.position)).to eql true
+        expect(@board.self_in_check?(@king.color)).to eql true
       end
 
       it "returns false if your king is not in check" do
         @king.valid_moves["e2"].execute
-        expect(@board.self_in_check?(@king.position)).to eql false
+        expect(@board.self_in_check?(@king.color)).to eql false
       end
     end
 
@@ -94,16 +94,16 @@ describe Board do
 
       it "returns true if you put your king into check" do
         @rookw.valid_moves["d2"].execute
-        expect(@board.self_in_check?(@rookw.position)).to eql true
+        expect(@board.self_in_check?(@rookw.color)).to eql true
       end
 
       it "returns false if your king is not in check" do
         @rookw.valid_moves["e5"].execute
-        expect(@board.self_in_check?(@rookw.position)).to eql false
+        expect(@board.self_in_check?(@rookw.color)).to eql false
         @rookw.valid_moves["e7"].execute
-        expect(@board.self_in_check?(@rookw.position)).to eql false
+        expect(@board.self_in_check?(@rookw.color)).to eql false
         @rookw.valid_moves["a7"].execute
-        expect(@board.self_in_check?(@rookw.position)).to eql false
+        expect(@board.self_in_check?(@rookw.color)).to eql false
       end
     end
   end

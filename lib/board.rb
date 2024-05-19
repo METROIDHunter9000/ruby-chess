@@ -153,10 +153,9 @@ class Board
     return false
   end
 
-  def self_in_check?(position)
-    piece = index(position)
-    king = get_king(piece.color)
-    enemy_king = get_enemy_king(piece.color)
+  def self_in_check?(color)
+    king = get_king(color)
+    enemy_king = get_enemy_king(color)
     return piece_attacking?(enemy_king.color, king.position)
   end
 
