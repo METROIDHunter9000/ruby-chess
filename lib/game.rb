@@ -145,5 +145,11 @@ class Game
       #switch player for new turn
       self.switch_player
     end
+
+    if self.in_check[in_mate]
+      puts "#{in_mate}, you've been checkmated!"
+    else
+      puts "#{in_mate} was mated. The game is a draw."
+    end
   end
 end
