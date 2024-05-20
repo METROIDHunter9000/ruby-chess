@@ -2,10 +2,12 @@ require_relative './coordinate.rb'
 require_relative "./piece.rb"
 require_relative "./move.rb"
 require 'set'
+require 'json'
 
 class Board
-  private attr_accessor :teams
+  public attr_accessor :teams
   private attr_accessor :kings
+  public attr_reader :factories
 
   private
   def get_team(color)
@@ -15,7 +17,33 @@ class Board
 
   public
   def initialize
+    @factories = {
+      Pawn: PawnFactory.new(self),
+      Knight: KnightFactory.new(self),
+      Rook: RookFactory.new(self),
+      Bishop: BishopFactory.new(self),
+      Queen: QueenFactory.new(self),
+      King: KingFactory.new(self)
+    }
     reset!
+  end
+
+  def to_json
+    obj = Hash.new
+    obj["pieces"] = self.teams[:white].map {|piece| piece.to_json}
+    obj["pieces"] += self.teams[:black].map {|piece| piece.to_json}
+    return obj
+  end
+
+  def self.from_json(json_obj)
+    board = Board.new_blank
+    json_obj["pieces"].each do |piece_obj|
+      piece = board.factories[piece_obj["class"].to_sym].create_piece(piece_obj["color"].to_sym, piece_obj["position"])
+      piece.num_moves = piece_obj["num_moves"]
+      piece.en_passant_capturable = piece_obj["en_passant_capturable"] if piece.class == Pawn
+      board.delete_piece(piece.position) if piece_obj["is_captured"]
+    end
+    return board
   end
 
   def self.new_blank
@@ -38,30 +66,24 @@ class Board
     new_piece(Coordinate.new(4,7), black_king)
     new_piece(Coordinate.new(4,0), white_king)
 
-    queen_ftry = QueenFactory.new(self)
-    pawn_ftry = PawnFactory.new(self)
-    rook_ftry = RookFactory.new(self)
-    kn_ftry = KnightFactory.new(self)
-    bshp_ftry = BishopFactory.new(self)
-
-    queen_ftry.create_piece(:black, Coordinate.new(3,7))
-    queen_ftry.create_piece(:white, Coordinate.new(3,0))
-    bshp_ftry.create_piece(:black, Coordinate.new(2,7))
-    bshp_ftry.create_piece(:black, Coordinate.new(5,7))
-    bshp_ftry.create_piece(:white, Coordinate.new(2,0))
-    bshp_ftry.create_piece(:white, Coordinate.new(5,0))
-    kn_ftry.create_piece(:black, Coordinate.new(1,7))
-    kn_ftry.create_piece(:black, Coordinate.new(6,7))
-    kn_ftry.create_piece(:white, Coordinate.new(1,0))
-    kn_ftry.create_piece(:white, Coordinate.new(6,0))
-    rook_ftry.create_piece(:black, Coordinate.new(0,7))
-    rook_ftry.create_piece(:black, Coordinate.new(7,7))
-    rook_ftry.create_piece(:white, Coordinate.new(0,0))
-    rook_ftry.create_piece(:white, Coordinate.new(7,0))
+    self.factories[:Queen].create_piece(:black, Coordinate.new(3,7))
+    self.factories[:Queen].create_piece(:white, Coordinate.new(3,0))
+    self.factories[:Bishop].create_piece(:black, Coordinate.new(2,7))
+    self.factories[:Bishop].create_piece(:black, Coordinate.new(5,7))
+    self.factories[:Bishop].create_piece(:white, Coordinate.new(2,0))
+    self.factories[:Bishop].create_piece(:white, Coordinate.new(5,0))
+    self.factories[:Knight].create_piece(:black, Coordinate.new(1,7))
+    self.factories[:Knight].create_piece(:black, Coordinate.new(6,7))
+    self.factories[:Knight].create_piece(:white, Coordinate.new(1,0))
+    self.factories[:Knight].create_piece(:white, Coordinate.new(6,0))
+    self.factories[:Rook].create_piece(:black, Coordinate.new(0,7))
+    self.factories[:Rook].create_piece(:black, Coordinate.new(7,7))
+    self.factories[:Rook].create_piece(:white, Coordinate.new(0,0))
+    self.factories[:Rook].create_piece(:white, Coordinate.new(7,0))
 
     0.upto 7 do |col|
-      pawn_ftry.create_piece(:white, Coordinate.new(col, 1))
-      pawn_ftry.create_piece(:black, Coordinate.new(col, 6))
+      self.factories[:Pawn].create_piece(:white, Coordinate.new(col, 1))
+      self.factories[:Pawn].create_piece(:black, Coordinate.new(col, 6))
     end
   end
 
@@ -111,6 +133,7 @@ class Board
     piece.is_captured = false
     overwrite(position, piece)
     self.teams[piece.color] << piece
+    return piece
   end
 
   def delete_piece(position)
@@ -211,6 +234,13 @@ class Board
   class QueenFactory < PieceFactory
     def create_piece(color, position)
       piece = Queen.new(@board, color)
+      @board.new_piece(position, piece)
+    end
+  end
+
+  class KingFactory < PieceFactory
+    def create_piece(color, position)
+      piece = King.new(@board, color)
       @board.new_piece(position, piece)
     end
   end

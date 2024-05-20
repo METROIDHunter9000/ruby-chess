@@ -1,4 +1,5 @@
 require_relative './coordinate.rb'
+require 'json'
 require 'pry-byebug'
 
 ANSI_ESCAPE_FOREGROUND_BLACK = "\033[38;5;0m".freeze
@@ -19,6 +20,16 @@ class Piece
   end
 
   public
+  def to_json
+    obj = Hash.new
+    obj["class"] = self.class
+    obj["color"] = self.color
+    obj["position"] = self.position.to_algebraic
+    obj["num_moves"] = self.num_moves
+    obj["is_captured"] = self.is_captured
+    obj
+  end
+
   def valid_moves; end
 
   def legal_moves
@@ -139,6 +150,12 @@ class Pawn < Piece
   def initialize(board, color, position = Coordinate.new)
     super(board, color, position, "♟")
     self.en_passant_capturable = false
+  end
+
+  def to_json
+    obj = super
+    obj["en_passant_capturable"] = self.en_passant_capturable
+    obj
   end
 
   def valid_moves

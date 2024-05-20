@@ -1,16 +1,40 @@
 require_relative './board.rb'
+require_relative './display.rb'
+require 'json'
 
 class Game
+  public 
+  attr_accessor :players 
+  attr_accessor :in_check 
+  attr_accessor :num_moves 
+  attr_accessor :board
   
   private
+  def switch_player
+    self.players << self.players.shift
+  end
+
   def get_input
     print "> "
     input = gets.chomp
-    until input.match("^[a-h][1-8]$")
+    until input.match("^[a-h][1-8]$") or input == "save" or input == "quit"
       puts "#{input} doesn't look right. Try again:"
       print "> "
       input = gets.chomp
     end
+
+    if input == "save"
+      json_str = JSON.generate(self.to_json)
+      File.open("game.json", "w") do |file|
+        file.print(json_str)
+      end
+      puts "Game saved!"
+      get_input
+    elsif input == "quit"
+      puts "Quitting..."
+      exit
+    end
+
     return input
   end
 
@@ -44,39 +68,58 @@ class Game
 
   public
   def initialize
-    @board = Board.new_standard
-    @display = BoardDisplay.new(@board)
+    self.board = Board.new_standard
+    self.players = [:white, :black]
+    self.in_check = {white: false, black: false}
+    self.num_moves = {white: 0, black: 0}
+  end
+
+  def to_json
+    obj = Hash.new
+    obj["board"] = self.board.to_json
+    obj["players"] = self.players
+    obj["in_check"] = self.in_check
+    obj["num_moves"] = self.num_moves
+    obj
+  end
+
+  def self.from_json(json_obj)
+    game = Game.new
+    game.board = Board.from_json(json_obj["board"])
+    game.players = json_obj["players"].map {|str| str.to_sym}
+    game.in_check = json_obj["in_check"].transform_keys {|key| key.to_sym}
+    game.num_moves = json_obj["num_moves"].transform_keys {|key| key.to_sym}
+    game
   end
 
   def start
-    players = [:white, :black]
-    in_check = {white: false, black: false}
+    @display = BoardDisplay.new(self.board)
     in_mate = nil
     loop do
       player = players[0]
 
       #reset en_passant_capturable on all of the player's pawns
-      @board.each_piece(player) do |piece|
+      self.board.each_piece(player) do |piece|
         piece.en_passant_capturable = false if piece.class == Pawn
       end
 
       #if player is in check, create board highlights and print warning
-      checking = @board.pieces_checking(players[1])
+      checking = self.board.pieces_checking(players[1])
       highlights = Array.new
-      in_check[player] = checking.length > 0
-      if in_check[player]
+      self.in_check[player] = checking.length > 0
+      if self.in_check[player]
         positions = checking.map {|piece| piece.position.to_algebraic}
-        positions << @board.get_king(player).position.to_algebraic
+        positions << self.board.get_king(player).position.to_algebraic
         highlights << Highlight.new(positions, "9", "9")
       end
 
       #display board
       @display.display(flipped: player == :black, highlights: highlights)
-      puts "\e[101mWARNING! YOUR KING IS IN CHECK!\e[0m" if in_check[player]
+      puts "\e[101mWARNING! YOUR KING IS IN CHECK!\e[0m" if self.in_check[player]
 
       #if player in mate: end game
       if @board.player_in_mate?(player)
-        puts "Mate!"
+        puts "\e[91mYou've been mated!\e[0m"
         in_mate = player
         break
       end
@@ -97,9 +140,10 @@ class Game
 
       #execute the move
       moves[destination].execute
+      self.num_moves[player] += 1
 
-      #switch players for new turn
-      players << players.shift
+      #switch player for new turn
+      self.switch_player
     end
   end
 end
